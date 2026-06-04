@@ -1,5 +1,6 @@
 package com.carbonexchange.tradingengine.domain.market.service;
 
+import com.carbonexchange.tradingengine.domain.market.model.OrderBookSnapshot;
 import com.carbonexchange.tradingengine.domain.market.model.OrderRequest;
 import com.carbonexchange.tradingengine.domain.market.model.Trade;
 import jakarta.persistence.EntityManager;
@@ -89,5 +90,21 @@ public class ContinuousDoubleAuctionEngine implements MatchingEngine {
         buyOrders.clear();
         sellOrders.clear();
         log.info("Order book flushed.");
+    }
+
+    @Override
+    public OrderBookSnapshot getOrderBookSnapshot() {
+        // Stream and sort so the client sees the exact market priority
+        var buys = buyOrders.stream()
+                .sorted(Comparator.comparing(OrderRequest::price).reversed()
+                        .thenComparing(OrderRequest::timestamp))
+                .toList();
+
+        var sells = sellOrders.stream()
+                .sorted(Comparator.comparing(OrderRequest::price)
+                        .thenComparing(OrderRequest::timestamp))
+                .toList();
+
+        return new OrderBookSnapshot(buys, sells);
     }
 }

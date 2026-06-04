@@ -1,6 +1,8 @@
 package com.carbonexchange.tradingengine.domain.market.service;
 
+import com.carbonexchange.tradingengine.domain.market.model.OrderBookSnapshot;
 import com.carbonexchange.tradingengine.domain.market.model.OrderRequest;
+
 
 public interface MatchingEngine {
     /**
@@ -12,4 +14,6 @@ public interface MatchingEngine {
      * Clears the current order book (useful for testing or end-of-day settlement).
      */
     void flushMarket();
+
+    OrderBookSnapshot getOrderBookSnapshot();
 }
