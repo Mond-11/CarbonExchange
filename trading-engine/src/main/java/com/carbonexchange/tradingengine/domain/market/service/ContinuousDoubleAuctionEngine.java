@@ -21,16 +21,22 @@ public class ContinuousDoubleAuctionEngine implements MatchingEngine {
 
     private final EntityManager entityManager;
 
-    // The WebSocket messenger injected perfectly
+    /**
+     * Template for sending messages via WebSockets.
+     */
     private final SimpMessagingTemplate messagingTemplate;
 
-    // Max-Heap: Highest buy price gets priority
+    /**
+     * A priority queue for buy orders, ordered by highest price and then by earliest timestamp.
+     */
     private final PriorityQueue<OrderRequest> buyOrders = new PriorityQueue<>(
             Comparator.comparing(OrderRequest::price).reversed()
-                    .thenComparing(OrderRequest::timestamp) // FIFO for same price
+                    .thenComparing(OrderRequest::timestamp)
     );
 
-    // Min-Heap: Lowest sell price gets priority
+    /**
+     * A priority queue for sell orders, ordered by lowest price and then by earliest timestamp.
+     */
     private final PriorityQueue<OrderRequest> sellOrders = new PriorityQueue<>(
             Comparator.comparing(OrderRequest::price)
                     .thenComparing(OrderRequest::timestamp)
@@ -49,7 +55,6 @@ public class ContinuousDoubleAuctionEngine implements MatchingEngine {
 
         matchOrders();
 
-        // BROADCAST 1: Send the updated order book state to React every time the queues change
         messagingTemplate.convertAndSend("/topic/orderbook", getOrderBookSnapshot());
     }
 
@@ -62,38 +67,27 @@ public class ContinuousDoubleAuctionEngine implements MatchingEngine {
             OrderRequest highestBuy = buyOrders.peek();
             OrderRequest lowestSell = sellOrders.peek();
 
-            // If the highest buyer won't meet the lowest seller's price, no match is possible
             if (highestBuy.price().compareTo(lowestSell.price()) < 0) {
                 break;
             }
 
-            // A match is found!
             buyOrders.poll();
             sellOrders.poll();
 
-            // Determine execution price (usually the price of the order that rested in the book first)
             BigDecimal executionPrice = highestBuy.timestamp().isBefore(lowestSell.timestamp())
                     ? highestBuy.price()
                     : lowestSell.price();
 
-            // Determine the quantity exchanged
             BigDecimal executionAmount = highestBuy.amount().min(lowestSell.amount());
 
             Trade trade = new Trade(highestBuy.courierId(), lowestSell.courierId(), executionPrice, executionAmount);
 
-            // Persist the executed trade to PostgreSQL
             entityManager.persist(trade);
 
             log.info("Trade Executed! Buyer: {}, Seller: {}, Price: {}",
                     trade.getBuyerId(), trade.getSellerId(), executionPrice);
 
-            // BROADCAST 2: Send the newly executed trade directly to the React history table
             messagingTemplate.convertAndSend("/topic/trades", trade);
-
-            // NOTE 1 order = 1 chunk.
-            // If implement partial fills later (e.g., Buy 5, Sell 3, leaving 2 remaining),
-            // mathematically subtract the executionAmount and re-insert
-            // the remaining OrderRequest back into the buyOrders or sellOrders queue right here.
         }
     }
 
@@ -103,13 +97,11 @@ public class ContinuousDoubleAuctionEngine implements MatchingEngine {
         sellOrders.clear();
         log.info("Order book flushed.");
 
-        // BROADCAST 3: Clear the React UI when the market is flushed
         messagingTemplate.convertAndSend("/topic/orderbook", getOrderBookSnapshot());
     }
 
     @Override
     public OrderBookSnapshot getOrderBookSnapshot() {
-        // Stream and sort so the client sees the exact market priority
         var buys = buyOrders.stream()
                 .sorted(Comparator.comparing(OrderRequest::price).reversed()
                         .thenComparing(OrderRequest::timestamp))

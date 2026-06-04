@@ -13,11 +13,15 @@ public class OrderConsumer {
 
     private final MatchingEngine matchingEngine;
 
+    /**
+     * Consumes orders from the "incoming-orders" Kafka topic and processes them.
+     * 
+     * @param order the order request received from Kafka
+     */
     @KafkaListener(topics = "incoming-orders", groupId = "trading-engine-group")
     public void consume(OrderRequest order) {
         log.info("Consumed order from Kafka. Handing to Matching Engine: {}", order.courierId());
 
-        // This runs in a separate background thread!
         matchingEngine.processOrder(order);
     }
 }

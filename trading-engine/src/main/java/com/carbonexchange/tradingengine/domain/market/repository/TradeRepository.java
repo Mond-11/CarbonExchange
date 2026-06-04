@@ -6,8 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
+/**
+ * Repository for accessing and managing {@link Trade} entities.
+ */
 @Repository
 public interface TradeRepository extends JpaRepository<Trade, UUID> {
-    // Spring Data automatically provides findAll(), findById(), etc.
-    // We can add custom queries later, like: List<Trade> findByBuyerId(UUID buyerId);
 }

@@ -21,7 +21,15 @@ public record OrderRequest(
 ) {
     public enum OrderType { BUY, SELL }
 
-    // Validation logic inside the record constructor
+    /**
+     * Compact constructor for OrderRequest with validation logic.
+     * 
+     * @param courierId the ID of the courier
+     * @param type the type of the order (BUY/SELL)
+     * @param price the price of the order
+     * @param amount the amount of the order
+     * @param timestamp the timestamp of the order
+     */
     public OrderRequest {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Amount must be greater than zero");

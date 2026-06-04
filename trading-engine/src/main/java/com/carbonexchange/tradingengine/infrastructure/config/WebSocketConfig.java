@@ -12,14 +12,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        // These are the "channels" our React app will subscribe to
         config.enableSimpleBroker("/topic");
         config.setApplicationDestinationPrefixes("/app");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // The URL React will use to establish the connection
         registry.addEndpoint("/ws-exchange")
                 .setAllowedOrigins("http://localhost:5173");
     }

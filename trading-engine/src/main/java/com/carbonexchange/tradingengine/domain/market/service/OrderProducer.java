@@ -11,16 +11,23 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class OrderProducer {
 
-    // Spring's built-in tool for sending messages to Kafka
+    /**
+     * Kafka template for sending OrderRequest messages.
+     */
     private final KafkaTemplate<String, OrderRequest> kafkaTemplate;
 
-    // The name of the "channel" we are broadcasting on
+    /**
+     * The Kafka topic for incoming orders.
+     */
     private static final String TOPIC = "incoming-orders";
 
+    /**
+     * Sends an order to the Kafka topic.
+     * 
+     * @param order the order request to send
+     */
     public void sendOrder(OrderRequest order) {
         log.info("Publishing order to Kafka Topic: {}", order.courierId());
-        // We use the Courier ID as the Kafka Key to ensure orders from the same
-        // courier are processed in the exact order they were sent.
         kafkaTemplate.send(TOPIC, order.courierId().toString(), order);
     }
 }

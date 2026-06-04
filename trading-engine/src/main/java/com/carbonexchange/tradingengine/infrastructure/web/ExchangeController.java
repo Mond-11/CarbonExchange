@@ -23,6 +23,12 @@ public class ExchangeController {
     private final TradeRepository tradeRepository;
     private final OrderProducer orderProducer;
 
+    /**
+     * Places an order by sending it to the order producer.
+     * 
+     * @param order the order request to place
+     * @return a response entity indicating the order has been accepted
+     */
     @PostMapping("/order")
     public ResponseEntity<String> placeOrder(@RequestBody OrderRequest order) {
         orderProducer.sendOrder(order);
@@ -30,17 +36,31 @@ public class ExchangeController {
         return ResponseEntity.accepted().body("Order received and queued for processing.");
     }
 
+    /**
+     * Retrieves the current state of the order book.
+     * 
+     * @return a response entity containing the order book snapshot
+     */
     @GetMapping("/orderbook")
     public ResponseEntity<OrderBookSnapshot> getOrderBook() {
         return ResponseEntity.ok(matchingEngine.getOrderBookSnapshot());
     }
 
+    /**
+     * Retrieves the history of all executed trades.
+     * 
+     * @return a response entity containing a list of trades
+     */
     @GetMapping("/trades")
     public ResponseEntity<List<Trade>> getTradeHistory() {
-        // Fetches all executed trades from PostgreSQL
         return ResponseEntity.ok(tradeRepository.findAll());
     }
 
+    /**
+     * Flushes the market by clearing all orders from the matching engine.
+     * 
+     * @return a response entity indicating the market has been flushed
+     */
     @DeleteMapping("/flush")
     public ResponseEntity<String> flushMarket() {
         matchingEngine.flushMarket();

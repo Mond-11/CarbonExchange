@@ -12,7 +12,10 @@ import java.util.UUID;
 @Entity
 @Table(name = "executed_trades")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED) // Requires JPA, restricts manual empty creation
+/**
+ * Protected no-args constructor for JPA.
+ */
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Trade {
 
     @Id

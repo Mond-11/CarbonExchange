@@ -1,8 +1,10 @@
-// src/components/TradingForm.tsx
 import { useState } from 'react';
 import { placeOrder } from '../services/api';
 import type { OrderType, OrderRequest } from '../types';
 
+/**
+ * A form component for placing buy or sell orders on the exchange.
+ */
 export default function TradingForm() {
     const [type, setType] = useState<OrderType>('BUY');
     const [price, setPrice] = useState<string>('');
@@ -11,29 +13,26 @@ export default function TradingForm() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault(); // Prevent the browser from refreshing the page
+        e.preventDefault();
         if (!price || !amount) return;
 
         setIsSubmitting(true);
         setStatus(null);
 
-        // Construct the exact DTO the Spring Boot backend expects
         const orderPayload: OrderRequest = {
-            courierId: crypto.randomUUID(), // Automatically generate a UUID
+            courierId: crypto.randomUUID(),
             type: type,
             price: parseFloat(price),
             amount: parseFloat(amount),
-            timestamp: new Date().toISOString() // Format as Java Instant
+            timestamp: new Date().toISOString()
         };
 
         try {
             await placeOrder(orderPayload);
             setStatus(`Successfully submitted ${type} order!`);
-            // Clear the inputs so the user can quickly type the next trade
             setPrice('');
             setAmount('');
 
-            // Clear the success message after 2 seconds
             setTimeout(() => setStatus(null), 2000);
         } catch (error) {
             setStatus("Error: Could not reach the broker.");
