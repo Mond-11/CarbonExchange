@@ -16,6 +16,10 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * REST controller for exchange operations.
+ * Provides endpoints for placing orders, retrieving the order book, and trade history.
+ */
 @RestController
 @RequestMapping("/api/v1/exchange")
 @RequiredArgsConstructor

@@ -9,6 +9,13 @@ interface MarketMetricsProps {
 
 type TimeSelection = '1M' | '1H' | '1D';
 
+/**
+ * Component for displaying real-time market metrics.
+ * Shows LTP (Last Traded Price), Spread, and Volume for different time periods.
+ * 
+ * @param props.trades list of recent trades for volume calculation
+ * @param props.orderBook current order book for spread calculation
+ */
 const MarketMetrics: React.FC<MarketMetricsProps> = ({ trades, orderBook }) => {
     const [volSelection, setVolSelection] = useState<TimeSelection>('1M');
     const ltp = trades[0]?.price || 0;

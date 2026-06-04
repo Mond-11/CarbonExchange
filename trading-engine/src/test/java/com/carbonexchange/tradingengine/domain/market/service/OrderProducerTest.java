@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -34,5 +35,12 @@ class OrderProducerTest {
         orderProducer.sendOrder(order);
 
         verify(kafkaTemplate).send(eq("incoming-orders"), eq(order.courierId().toString()), eq(order));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAmountIsZero() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            new OrderRequest(UUID.randomUUID(), OrderRequest.OrderType.BUY, OrderRequest.ExecutionMode.LIMIT, BigDecimal.ZERO, BigDecimal.ONE, Instant.now());
+        });
     }
 }

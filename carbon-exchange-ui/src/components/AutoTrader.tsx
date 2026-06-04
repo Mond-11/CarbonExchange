@@ -8,6 +8,8 @@ import type { OrderRequest, User } from '../types';
  * A component that simulates a market maker bot.
  * Automatically generates and places buy and sell orders.
  * Now takes existing listings into account to provide realistic liquidity.
+ * 
+ * @param props.orderBook current order book snapshot for market analysis
  */
 export default function AutoTrader({ orderBook = { buyOrders: [], sellOrders: [] } }: { orderBook?: any }) {
     const [isActive, setIsActive] = useState(false);

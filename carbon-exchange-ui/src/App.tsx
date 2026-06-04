@@ -3,7 +3,7 @@ import { Client } from '@stomp/stompjs';
 import { Container, Row, Col, Navbar, Nav, Button, Table, Card, Badge, Spinner } from 'react-bootstrap';
 import { fetchOrderBook, fetchTrades, emergencyResolveAll } from './services/api';
 import { getCurrentUser, logout, fetchUser } from './services/auth';
-import type { OrderBookSnapshot, Trade, User } from './types';
+import type {OrderBookSnapshot, OrderRequest, Trade, User} from './types';
 import TradingForm from './components/TradingForm';
 import AutoTrader from './components/AutoTrader';
 import MarketMetrics from './components/MarketMetrics';

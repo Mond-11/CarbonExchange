@@ -5,12 +5,14 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Represents a bid placed by a courier on the internal exchange.
- * * @param courierId The UUID of the courier (Van or E-Bike driver)
- * @param type BUY (needs credits for a route) or SELL (earned credits)
- * @param amount Number of carbon credits
- * @param price Per-credit price they are willing to pay/accept
- * @param timestamp Exact time of the order for latency calculations
+ * Represents a request to place an order in the exchange.
+ *
+ * @param courierId the ID of the user (courier) placing the order
+ * @param type the type of order (BUY, SELL, or CLEAR_ALL)
+ * @param executionMode the mode of execution (LIMIT or MARKET)
+ * @param amount the number of carbon credits to trade
+ * @param price the price per credit (ignored for market orders)
+ * @param timestamp the time the order was placed
  */
 public record OrderRequest(
         UUID courierId,

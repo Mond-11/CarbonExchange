@@ -6,6 +6,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+/**
+ * Configuration for Jackson JSON serialization/deserialization.
+ * Registers necessary modules such as {@link JavaTimeModule} for date/time support.
+ */
 @Configuration
 public class JacksonConfig {
 

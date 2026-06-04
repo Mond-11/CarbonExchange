@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+/**
+ * Represents a user in the system with their account credentials and balances.
+ */
 @Entity
 @Table(name = "users")
 @Data

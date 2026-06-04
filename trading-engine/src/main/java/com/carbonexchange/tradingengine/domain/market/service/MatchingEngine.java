@@ -4,6 +4,9 @@ import com.carbonexchange.tradingengine.domain.market.model.OrderBookSnapshot;
 import com.carbonexchange.tradingengine.domain.market.model.OrderRequest;
 
 
+/**
+ * Interface for the matching engine that handles order processing and book management.
+ */
 public interface MatchingEngine {
     /**
      * Processes an incoming order and attempts to match it against the order book.

@@ -7,6 +7,12 @@ interface AuthProps {
     onLogin: (user: User) => void;
 }
 
+/**
+ * Component for user authentication.
+ * Provides a form to toggle between Login and Registration.
+ * 
+ * @param onLogin callback function when a user successfully logs in or registers
+ */
 const Auth: React.FC<AuthProps> = ({ onLogin }) => {
     const [isLogin, setIsLogin] = useState(true);
     const [username, setUsername] = useState('');
@@ -34,7 +40,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         <div>
             <h5 className="mb-3 fw-bold text-body">{isLogin ? 'Login' : 'Create Account'}</h5>
             <Form onSubmit={handleSubmit}>
-                <Form.Group className="mb-3">
+                <Form.Group className="mb-3" controlId="formUsername">
                     <Form.Label className="small text-secondary fw-bold text-uppercase">Username</Form.Label>
                     <Form.Control 
                         type="text" 
@@ -45,7 +51,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                         size="sm"
                     />
                 </Form.Group>
-                <Form.Group className="mb-3">
+                <Form.Group className="mb-3" controlId="formPassword">
                     <Form.Label className="small text-secondary fw-bold text-uppercase">Password</Form.Label>
                     <Form.Control 
                         type="password" 

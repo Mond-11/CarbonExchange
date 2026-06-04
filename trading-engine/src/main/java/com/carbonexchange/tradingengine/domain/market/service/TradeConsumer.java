@@ -13,6 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+/**
+ * Consumer for trades executed by the Kafka Streams matching engine.
+ * Persists trades to the database and updates user balances accordingly.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -24,6 +28,12 @@ public class TradeConsumer {
 
     private static final UUID SYSTEM_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
+    /**
+     * Consumes a trade record from Kafka.
+     * Updates involved user balances and broadcasts the trade to the UI.
+     * 
+     * @param trade the executed trade
+     */
     @KafkaListener(topics = "trades", groupId = "trading-engine-trades-group")
     @Transactional
     public void consume(Trade trade) {

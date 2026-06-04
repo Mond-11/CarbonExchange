@@ -12,12 +12,22 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Service for managing user accounts, authentication, and balances.
+ */
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Registers a new user with initial balances.
+     * 
+     * @param username the username
+     * @param password the raw password (will be encoded)
+     * @return the created user
+     */
     public User register(String username, String password) {
         User user = User.builder()
                 .username(username)
@@ -40,6 +50,13 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    /**
+     * Updates money and credit balances for a specific user.
+     * 
+     * @param userId the ID of the user
+     * @param moneyDelta the amount of money to add (negative to deduct)
+     * @param creditDelta the amount of credits to add (negative to deduct)
+     */
     @Transactional
     public void updateBalances(UUID userId, BigDecimal moneyDelta, BigDecimal creditDelta) {
         userRepository.findById(userId).ifPresent(user -> {

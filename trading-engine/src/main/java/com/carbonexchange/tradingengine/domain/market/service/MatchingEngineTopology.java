@@ -32,6 +32,12 @@ import java.util.*;
 
 import static org.apache.kafka.streams.StreamsConfig.*;
 
+/**
+ * Kafka Streams topology for the matching engine.
+ * This class configures the Kafka Streams application that processes incoming orders,
+ * matches them using a Continuous Double Auction (CDA) logic, and outputs trades
+ * and order book snapshots.
+ */
 @Configuration
 @Profile("!test")
 @EnableKafkaStreams
@@ -41,6 +47,11 @@ public class MatchingEngineTopology {
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
+    /**
+     * Configures the Kafka Streams properties.
+     * 
+     * @return the Kafka Streams configuration
+     */
     @Bean(name = KafkaStreamsDefaultConfiguration.DEFAULT_STREAMS_CONFIG_BEAN_NAME)
     public KafkaStreamsConfiguration kStreamsConfig() {
         Map<String, Object> props = new HashMap<>();
@@ -50,6 +61,15 @@ public class MatchingEngineTopology {
         return new KafkaStreamsConfiguration(props);
     }
 
+    /**
+     * Defines the matching stream topology.
+     * Consumes from "incoming-orders", processes orders through {@link MatchingProcessor},
+     * and produces to "trades" and "orderbook-snapshots".
+     * 
+     * @param streamsBuilder the streams builder
+     * @param objectMapper the object mapper for serialization
+     * @return the order stream
+     */
     @Bean
     public KStream<String, OrderRequest> matchingStream(StreamsBuilder streamsBuilder, ObjectMapper objectMapper) {
         Serde<OrderRequest> orderRequestSerde = new JsonSerde<>(OrderRequest.class, objectMapper);
@@ -85,6 +105,9 @@ public class MatchingEngineTopology {
     private static final BigDecimal MAX_SIDE_VOLUME = new BigDecimal("500.0");
     private static final UUID SYSTEM_ACCOUNT_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
+    /**
+     * Processor for matching incoming orders against the current order book state.
+     */
     private static class MatchingProcessor extends ContextualProcessor<String, OrderRequest, String, Object> {
         private KeyValueStore<String, OrderBookState> stateStore;
 

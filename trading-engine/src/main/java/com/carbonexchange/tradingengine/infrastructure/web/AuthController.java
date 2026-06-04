@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * REST controller for authentication and user management.
+ * Provides endpoints for registration, login, and retrieving user details.
+ */
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -46,6 +50,12 @@ public class AuthController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Helper method to map a {@link User} entity to a {@link UserResponse} DTO.
+     * 
+     * @param user the user entity
+     * @return the user response DTO
+     */
     private UserResponse toResponse(User user) {
         return new UserResponse(user.getId(), user.getUsername(), user.getMoneyBalance(), user.getCreditBalance());
     }

@@ -9,12 +9,13 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Represents an executed trade between a buyer and a seller.
+ * This entity is persisted in the database for trade history.
+ */
 @Entity
 @Table(name = "executed_trades")
 @Getter
-/**
- * Protected no-args constructor for JPA.
- */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Trade {
 

@@ -15,6 +15,12 @@ interface PriceChartProps {
     theme: 'light' | 'dark';
 }
 
+/**
+ * A real-time line chart component that plots execution prices of recent trades.
+ * 
+ * @param props.trades list of trades to plot
+ * @param props.theme current application theme (light/dark) for styling
+ */
 const PriceChart: React.FC<PriceChartProps> = ({ trades, theme }) => {
     // Reverse trades to show them in chronological order (oldest to newest)
     // and take the last 50 for the chart.

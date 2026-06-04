@@ -9,6 +9,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Implementation of the {@link MatchingEngine} that acts as a reactive view of the market.
+ * It listens to order book snapshots from Kafka and broadcasts them to the UI via WebSockets.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -24,6 +28,12 @@ public class ContinuousDoubleAuctionEngine implements MatchingEngine {
         log.warn("processOrder called directly on Engine. This should be handled by Kafka Streams. Order: {}", order.courierId());
     }
 
+    /**
+     * Updates the local view of the order book from a Kafka snapshot.
+     * Also broadcasts the snapshot to all connected WebSocket clients.
+     * 
+     * @param snapshot the new order book snapshot
+     */
     @org.springframework.kafka.annotation.KafkaListener(topics = "orderbook-snapshots", groupId = "trading-engine-engine-group")
     public void updateSnapshot(OrderBookSnapshot snapshot) {
         log.info("Received Snapshot update from Kafka");

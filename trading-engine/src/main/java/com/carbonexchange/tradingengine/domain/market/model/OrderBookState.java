@@ -8,6 +8,9 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents the persistent state of the order book in Kafka Streams state store.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

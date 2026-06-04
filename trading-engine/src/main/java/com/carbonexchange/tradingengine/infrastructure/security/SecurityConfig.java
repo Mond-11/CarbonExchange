@@ -16,6 +16,10 @@ import java.util.List;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+/**
+ * Security configuration for the application.
+ * Configures password encoding, CORS, and request authorization rules.
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
