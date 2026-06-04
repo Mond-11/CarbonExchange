@@ -44,6 +44,8 @@ input:focus { outline: none; border-color: #007bff; }
 }
 .active-buy { background-color: #4caf50; border-color: #4caf50; }
 .active-sell { background-color: #ff5252; border-color: #ff5252; }
+.active-limit { background-color: #2196f3; border-color: #2196f3; }
+.active-market { background-color: #ff9800; border-color: #ff9800; }
 
 .submit-btn {
   background-color: #007bff; color: white; border: none; padding: 12px;

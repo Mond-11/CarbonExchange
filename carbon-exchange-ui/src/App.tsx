@@ -81,7 +81,7 @@ function App() {
                   <tbody>
                   {orderBook.sellOrders.map((order, i) => (
                       <tr key={i} className="sell-row">
-                        <td>${Number(order.price).toFixed(2)}</td>
+                        <td>{order.executionMode === 'MARKET' ? 'MARKET' : `$${Number(order.price).toFixed(2)}`}</td>
                         <td>{Number(order.amount).toFixed(2)}</td>
                       </tr>
                   ))}
@@ -95,7 +95,7 @@ function App() {
                   <tbody>
                   {orderBook.buyOrders.map((order, i) => (
                       <tr key={i} className="buy-row">
-                        <td>${Number(order.price).toFixed(2)}</td>
+                        <td>{order.executionMode === 'MARKET' ? 'MARKET' : `$${Number(order.price).toFixed(2)}`}</td>
                         <td>{Number(order.amount).toFixed(2)}</td>
                       </tr>
                   ))}

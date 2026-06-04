@@ -29,7 +29,7 @@ class OrderProducerTest {
 
     @Test
     void shouldSendOrder() {
-        OrderRequest order = new OrderRequest(UUID.randomUUID(), OrderRequest.OrderType.BUY, BigDecimal.TEN, BigDecimal.ONE, Instant.now());
+        OrderRequest order = new OrderRequest(UUID.randomUUID(), OrderRequest.OrderType.BUY, OrderRequest.ExecutionMode.LIMIT, BigDecimal.TEN, BigDecimal.ONE, Instant.now());
         
         orderProducer.sendOrder(order);
 

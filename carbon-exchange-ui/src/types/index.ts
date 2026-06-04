@@ -1,12 +1,14 @@
 // src/types/index.ts
 
 export type OrderType = 'BUY' | 'SELL';
+export type ExecutionMode = 'LIMIT' | 'MARKET';
 
 export interface OrderRequest {
     courierId: string;
     type: OrderType;
+    executionMode: ExecutionMode;
     amount: number;
-    price: number;
+    price: number | null;
     timestamp: string;
 }
 

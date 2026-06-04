@@ -23,6 +23,7 @@ export default function AutoTrader() {
             const orderPayload: OrderRequest = {
                 courierId: crypto.randomUUID(),
                 type: type,
+                executionMode: 'LIMIT',
                 price: parseFloat(randomPrice),
                 amount: parseFloat(randomAmount),
                 timestamp: new Date().toISOString()

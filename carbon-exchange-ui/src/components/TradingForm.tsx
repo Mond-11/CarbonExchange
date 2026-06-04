@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { placeOrder } from '../services/api';
-import type { OrderType, OrderRequest } from '../types';
+import type { OrderType, OrderRequest, ExecutionMode } from '../types';
 
 /**
  * A form component for placing buy or sell orders on the exchange.
  */
 export default function TradingForm() {
     const [type, setType] = useState<OrderType>('BUY');
+    const [executionMode, setExecutionMode] = useState<ExecutionMode>('LIMIT');
     const [price, setPrice] = useState<string>('');
     const [amount, setAmount] = useState<string>('');
     const [status, setStatus] = useState<string | null>(null);
@@ -14,7 +15,7 @@ export default function TradingForm() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!price || !amount) return;
+        if ((executionMode === 'LIMIT' && !price) || !amount) return;
 
         setIsSubmitting(true);
         setStatus(null);
@@ -22,7 +23,8 @@ export default function TradingForm() {
         const orderPayload: OrderRequest = {
             courierId: crypto.randomUUID(),
             type: type,
-            price: parseFloat(price),
+            executionMode: executionMode,
+            price: executionMode === 'LIMIT' ? parseFloat(price) : null,
             amount: parseFloat(amount),
             timestamp: new Date().toISOString()
         };
@@ -67,18 +69,40 @@ export default function TradingForm() {
                 </div>
 
                 <div className="form-group">
-                    <label htmlFor="price">Price ($)</label>
-                    <input
-                        id="price"
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                        placeholder="e.g. 10.50"
-                        required
-                    />
+                    <label>Order Type</label>
+                    <div className="button-group">
+                        <button
+                            type="button"
+                            className={`type-btn ${executionMode === 'LIMIT' ? 'active-limit' : ''}`}
+                            onClick={() => setExecutionMode('LIMIT')}
+                        >
+                            LIMIT
+                        </button>
+                        <button
+                            type="button"
+                            className={`type-btn ${executionMode === 'MARKET' ? 'active-market' : ''}`}
+                            onClick={() => setExecutionMode('MARKET')}
+                        >
+                            MARKET
+                        </button>
+                    </div>
                 </div>
+
+                {executionMode === 'LIMIT' && (
+                    <div className="form-group">
+                        <label htmlFor="price">Price ($)</label>
+                        <input
+                            id="price"
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
+                            placeholder="e.g. 10.50"
+                            required
+                        />
+                    </div>
+                )}
 
                 <div className="form-group">
                     <label htmlFor="amount">Amount (Credits)</label>

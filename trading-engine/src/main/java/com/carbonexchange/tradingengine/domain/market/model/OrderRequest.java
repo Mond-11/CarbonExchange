@@ -15,11 +15,13 @@ import java.util.UUID;
 public record OrderRequest(
         UUID courierId,
         OrderType type,
+        ExecutionMode executionMode,
         BigDecimal amount,
         BigDecimal price,
         Instant timestamp
 ) {
     public enum OrderType { BUY, SELL }
+    public enum ExecutionMode { LIMIT, MARKET }
 
     /**
      * Compact constructor for OrderRequest with validation logic.

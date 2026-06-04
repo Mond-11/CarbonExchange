@@ -31,6 +31,19 @@ describe('TradingForm', () => {
         expect(buyBtn).toHaveClass('active-buy');
     });
 
+    it('should change execution mode', () => {
+        render(<TradingForm />);
+        const marketBtn = screen.getByRole('button', { name: 'MARKET' });
+        fireEvent.click(marketBtn);
+        expect(marketBtn).toHaveClass('active-market');
+        expect(screen.queryByLabelText('Price ($)')).not.toBeInTheDocument();
+        
+        const limitBtn = screen.getByRole('button', { name: 'LIMIT' });
+        fireEvent.click(limitBtn);
+        expect(limitBtn).toHaveClass('active-limit');
+        expect(screen.getByLabelText('Price ($)')).toBeInTheDocument();
+    });
+
     it('should submit order successfully', async () => {
         vi.mocked(api.placeOrder).mockResolvedValue(undefined);
         render(<TradingForm />);
@@ -43,11 +56,30 @@ describe('TradingForm', () => {
             expect(api.placeOrder).toHaveBeenCalledWith(expect.objectContaining({
                 price: 10.50,
                 amount: 5,
-                type: 'BUY'
+                type: 'BUY',
+                executionMode: 'LIMIT'
             }));
         });
 
         expect(screen.getByText('Successfully submitted BUY order!')).toBeInTheDocument();
+    });
+
+    it('should submit market order successfully', async () => {
+        vi.mocked(api.placeOrder).mockResolvedValue(undefined);
+        render(<TradingForm />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'MARKET' }));
+        fireEvent.change(screen.getByLabelText('Amount (Credits)'), { target: { value: '5' } });
+        fireEvent.click(screen.getByRole('button', { name: 'SUBMIT ORDER' }));
+
+        await waitFor(() => {
+            expect(api.placeOrder).toHaveBeenCalledWith(expect.objectContaining({
+                price: null,
+                amount: 5,
+                type: 'BUY',
+                executionMode: 'MARKET'
+            }));
+        });
     });
 
     it('should handle submission error', async () => {

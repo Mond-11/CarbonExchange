@@ -54,7 +54,7 @@ class ExchangeControllerTest {
 
     @Test
     void shouldPlaceOrder() throws Exception {
-        OrderRequest order = new OrderRequest(UUID.randomUUID(), OrderRequest.OrderType.BUY, BigDecimal.TEN, BigDecimal.ONE, Instant.now());
+        OrderRequest order = new OrderRequest(UUID.randomUUID(), OrderRequest.OrderType.BUY, OrderRequest.ExecutionMode.LIMIT, BigDecimal.TEN, BigDecimal.ONE, Instant.now());
 
         mockMvc.perform(post("/api/v1/exchange/order")
                 .contentType(MediaType.APPLICATION_JSON)

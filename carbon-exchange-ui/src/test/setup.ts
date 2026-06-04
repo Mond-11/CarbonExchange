@@ -1,5 +1,4 @@
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
 
 // Mock crypto.randomUUID for testing environment
 if (!global.crypto) {

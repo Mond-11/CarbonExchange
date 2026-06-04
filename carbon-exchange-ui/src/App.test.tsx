@@ -10,11 +10,11 @@ vi.mock('./services/api', () => ({
 
 vi.mock('@stomp/stompjs', () => {
     return {
-        Client: vi.fn().mockImplementation(() => ({
-            activate: vi.fn(),
-            deactivate: vi.fn(),
-            subscribe: vi.fn(),
-        })),
+        Client: class {
+            activate = vi.fn();
+            deactivate = vi.fn();
+            subscribe = vi.fn();
+        },
     };
 });
 
@@ -40,8 +40,8 @@ describe('App', () => {
 
     it('should display orders in the order book', async () => {
         const mockOrderBook = {
-            buyOrders: [{ price: 10, amount: 5, courierId: '1', timestamp: 'now' }],
-            sellOrders: [{ price: 12, amount: 3, courierId: '2', timestamp: 'now' }]
+            buyOrders: [{ price: 10, amount: 5, courierId: '1', timestamp: 'now', executionMode: 'LIMIT' as const, type: 'BUY' as const }],
+            sellOrders: [{ price: 12, amount: 3, courierId: '2', timestamp: 'now', executionMode: 'LIMIT' as const, type: 'SELL' as const }]
         };
         vi.mocked(api.fetchOrderBook).mockResolvedValue(mockOrderBook);
 

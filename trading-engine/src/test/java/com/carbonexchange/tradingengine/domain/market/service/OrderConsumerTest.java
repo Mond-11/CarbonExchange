@@ -24,7 +24,7 @@ class OrderConsumerTest {
 
     @Test
     void shouldConsumeOrder() {
-        OrderRequest order = new OrderRequest(UUID.randomUUID(), OrderRequest.OrderType.BUY, BigDecimal.TEN, BigDecimal.ONE, Instant.now());
+        OrderRequest order = new OrderRequest(UUID.randomUUID(), OrderRequest.OrderType.BUY, OrderRequest.ExecutionMode.LIMIT, BigDecimal.TEN, BigDecimal.ONE, Instant.now());
 
         orderConsumer.consume(order);
 
