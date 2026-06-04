@@ -2,7 +2,6 @@ package com.carbonexchange.tradingengine.domain.user.service;
 
 import com.carbonexchange.tradingengine.domain.user.model.User;
 import com.carbonexchange.tradingengine.domain.user.repository.UserRepository;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -48,15 +47,5 @@ public class UserService {
             user.setCreditBalance(user.getCreditBalance().add(creditDelta));
             userRepository.save(user);
         });
-    }
-
-    @PostConstruct
-    public void seedUsers() {
-        if (userRepository.count() == 0) {
-            for (int i = 1; i <= 10; i++) {
-                String username = "user" + i;
-                register(username, "password" + i);
-            }
-        }
     }
 }

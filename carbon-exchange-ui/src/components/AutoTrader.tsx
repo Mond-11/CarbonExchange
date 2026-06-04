@@ -55,7 +55,7 @@ export default function AutoTrader() {
 
         return () => clearInterval(interval);
 
-    }, [isActive, speed]);
+    }, [isActive, speed, users]);
 
     return (
         <section className="panel auto-trader-panel">

@@ -42,6 +42,7 @@ describe('App', () => {
         vi.mocked(api.fetchOrderBook).mockResolvedValue({ buyOrders: [], sellOrders: [] });
         vi.mocked(api.fetchTrades).mockResolvedValue([]);
         vi.mocked(auth.getCurrentUser).mockReturnValue(null);
+        vi.mocked(auth.fetchAllUsers).mockResolvedValue([]);
     });
 
     it('should render dashboard title', async () => {

@@ -117,13 +117,11 @@ function App() {
 
           <div className="controls-column">
             {user ? (
-                <>
                   <TradingForm user={user} />
-                  <AutoTrader />
-                </>
             ) : (
                 <Auth onLogin={setUser} />
             )}
+            <AutoTrader />
           </div>
 
           <section className="panel">
