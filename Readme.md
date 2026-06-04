@@ -1,91 +1,168 @@
-# Carbon Credit Exchange Platform
+# Carbon Exchange Platform: Високопродуктивна екосистема для торгівлі вуглецевими кредитами
 
-A high-performance, real-time marketplace designed to facilitate the trading of carbon credits between logistics providers. The platform specifically caters to the exchange between green transportation fleets (e.g., e-bike operators) who sell credits and traditional logistics companies (e.g., gas-powered van fleets) who purchase credits to offset their carbon footprint.
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.x-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Kafka Streams](https://img.shields.io/badge/Kafka%20Streams-Distributed-blue.svg)](https://kafka.apache.org/documentation/streams/)
+[![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
 
-## Features
+## 1. Аналіз предметної галузі та актуальність
+В умовах глобальних кліматичних змін та переходу до "зеленої" економіки, механізми торгівлі квотами на викиди вуглецю (Carbon Credits) стають критично важливим інструментом декарбонізації. Проте, існуючі ринки часто страждають від низької ліквідності, відсутності прозорості та високих операційних витрат.
 
-- **Continuous Double Auction (CDA) Engine**: A robust matching engine that automatically pairs buy and sell orders based on price-time priority.
-- **Real-Time Data Streaming**: Live updates for the order book and executed trades via WebSockets (STOMP).
-- **Asynchronous Order Processing**: High-throughput order handling using Apache Kafka for message queuing.
-- **Automated Trading**: Built-in support for simulated market activity to maintain liquidity.
-- **Modern Dashboard**: A responsive React-based UI for monitoring market depth and recent transactions.
-- **Market Stabilization**: Automated system that clears excess liquidity when the book grows too deep, ensuring system stability.
+### 1.1. Актуальні задачі
+*   **Автоматизація обміну**: Створення децентралізованих або високопродуктивних централізованих систем для миттєвого матчингу замовлень.
+*   **Забезпечення ліквідності**: Запобігання застою активів у "ринковому стакані".
+*   **Відмовостійкість**: Гарантування збереження стану ринку при технічних збоях.
 
-## Tech Stack
+### 1.2. Аналоги та конкуренти
+1.  **Xpansiv (CBL)**: Глобальний ринок екологічних товарів. Перевага — великий обсяг, недолік — закритість та високий поріг входу для малих логістичних компаній.
+2.  **Toucan Protocol**: Використовує блокчейн (Polygon) для токенізації квот. Перевага — прозорість, недолік — затримки (latency) блокчейн-мереж, що не підходить для HFT (High Frequency Trading).
+3.  **Дане рішення (Carbon Exchange Platform)**: Фокусується на гібридному підході — використання Kafka Streams для досягнення швидкості традиційних бірж при забезпеченні детермінованості та надійності, притаманної розподіленим системам.
 
-### Backend (`trading-engine`)
-- **Language**: Java 21
-- **Framework**: Spring Boot 4.0.x
-- **Messaging**: Apache Kafka (Order queuing & matching with Kafka Streams)
-- **Real-time**: Spring WebSocket with STOMP
-- **Database**: PostgreSQL (Persistence of trades)
-- **ORM**: Spring Data JPA / Hibernate
+---
 
-### Frontend (`carbon-exchange-ui`)
-- **Framework**: React 19
-- **Build Tool**: Vite
-- **Language**: TypeScript
-- **State Management**: React Hooks
-- **Communication**: STOMP.js (WebSockets), Fetch API (REST)
+## 2. Мета та завдання роботи
+**Мета**: Розробка прототипу високопродуктивного торгового майданчика для обміну вуглецевими кредитами між логістичними компаніями з використанням сучасних паттернів реактивного програмування.
 
-## Project Structure
+### Поставлені завдання:
+1.  Проектування архітектури, що базується на подіях (**Event-Driven Architecture**).
+2.  Реалізація механізму **Continuous Double Auction (CDA)** для автоматичного матчингу ордерів.
+3.  Забезпечення стану системи за допомогою **Kafka State Stores** (RocksDB).
+4.  Створення інтерфейсу моніторингу в реальному часі.
+5.  Впровадження механізмів стабілізації ринку (Excess Liquidity Clearing).
 
-```text
-.
-├── trading-engine         # Spring Boot matching engine and API
-└── carbon-exchange-ui      # React-based trading dashboard
+---
+
+## 3. Вибір технологій та обґрунтування
+Для вирішення поставлених завдань було обрано наступний технологічний стек:
+*   **Java 21**: Використання Virtual Threads (Project Loom) для ефективної обробки I/O та покращеної продуктивності.
+*   **Spring Boot 4.0**: Основний каркас для побудови мікросервісів та управління залежностями.
+*   **Apache Kafka & Kafka Streams**: Обрано як фундамент через здатність обробляти мільйони подій на секунду та вбудовані механізми управління станом (State Stores), що дозволяють уникати класичних вузьких місць реляційних БД при матчингу.
+*   **PostgreSQL**: Використовується виключно для довгострокового зберігання історії виконаних угод (Trades), а не для активного стану ринку.
+*   **React 19 + TypeScript**: Для створення швидкого та типізованого фронтенду з використанням сучасних React Hooks.
+
+---
+
+## 4. Архітектура та Проектування
+Система базується на реактивній архітектурі, де кожен компонент є слабопов'язаним та взаємодіє через шину подій.
+
+### 4.1. Схема потоків даних (Data Flow)
+1.  **Ingestion**: Користувач створює ордер через React UI. Ордер відправляється через REST API до `ExchangeController`.
+2.  **Queueing**: `OrderProducer` валідує запит та публікує його в топік Kafka `incoming-orders`.
+3.  **Matching**: Kafka Streams топологія (`MatchingEngineTopology`) зчитує ордер, завантажує поточний стан з RocksDB, виконує алгоритм CDA та оновлює стан.
+4.  **Distribution**: Результати (виконані угоди або оновлений стакан) публікуються в топіки `trades` та `orderbook-snapshots`.
+5.  **Persistence & Real-time**: 
+    *   `TradeConsumer` зберігає угоди в PostgreSQL.
+    *   WebSocket сервіс транслює оновлення клієнтам для візуалізації в реальному часі.
+
+---
+
+## 5. Реалізація компонентів та тестування
+
+### 5.1. Matching Engine (Серце системи)
+Реалізовано як `MatchingProcessor` всередині Kafka Streams. Основна перевага — **Price-Time Priority**.
+
+```java
+// Деталь пріоритетизації: Market ордери завжди попереду, далі за ціною та часом
+private PriorityQueue<OrderRequest> createBuyQueue() {
+    return new PriorityQueue<>(
+        Comparator.comparing((OrderRequest o) -> o.executionMode() == OrderRequest.ExecutionMode.MARKET ? 0 : 1)
+            .thenComparing(Comparator.comparing(OrderRequest::price, Comparator.nullsLast(Comparator.reverseOrder())))
+            .thenComparing(OrderRequest::timestamp)
+    );
+}
 ```
 
-## Getting Started
+### 5.2. Інтеграція компонентів
+Для забезпечення цілісності було реалізовано `FullOrderFlowIntegrationTest`, який перевіряє повний цикл від створення ордера до його збереження в БД.
 
-### Prerequisites
-- JDK 21
-- Node.js (v18+)
-- Docker and Docker Compose
+```java
+@Test
+void shouldProduceOrderAndPersistTrade() {
+    // Емуляція повного циклу обробки
+    orderProducer.sendOrder(order);
+    await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
+        assertThat(tradeRepository.findAll()).isNotEmpty();
+    });
+}
+```
 
-### Setup Infrastructure
-Run the required services (PostgreSQL, Kafka, Zookeeper) using Docker:
+### 5.3. Фронтенд: Дашборд моніторингу
+Побудований на базі React 19 з використанням:
+*   **PriceChart**: Візуалізація динаміки ціни в реальному часі.
+*   **OrderBook**: Відображення глибини ринку (Bid/Ask).
+*   **AutoTrader**: Компонент для симуляції ринкової активності, що дозволяє тестувати систему під навантаженням без зовнішніх користувачів.
+
+---
+
+## 6. Аналіз Продуктивності та Бенчмарки
+Для оцінки ефективності системи було проведено серію експериментів з використанням розробленого інструменту бенчмаркінгу. Тестування проводилось на базі 5000 ордерів у режимі максимального навантаження.
+
+| Показник | Значення (реальні) | Опис |
+| :--- | :--- | :--- |
+| **Throughput** | ~730 ордерів/сек | Пропускна здатність на один потік обробки в тестовому середовищі. |
+| **P50 Latency** | ~645 мс | Медіанна затримка при навантаженні 1000 ордерів. |
+| **P99 Latency** | ~1.27 сек | Затримка обробки у 99% випадків (при 1000 ордерах). |
+| **State Persistence** | RocksDB | Локальне збереження стану забезпечує стабільність при зростанні глибини стакану. |
+
+### 6.1. Інструмент Бенчмаркінгу (Benchmarking Tool)
+Для самостійної перевірки продуктивності в проект інтегровано спеціалізований інструмент.
+
+**Як запустити бенчмарк:**
+1. Переконайтеся, що Backend запущений.
+2. Виконайте POST-запит на ендпоінт `/api/benchmark/run?count=1000` (де `count` - кількість ордерів для тесту).
+3. Отримайте результат у форматі JSON (приклад реального виміру):
+```json
+{
+  "totalOrders": 1000,
+  "snapshotsProcessed": 1000,
+  "tradesExecuted": 615,
+  "throughputOrdersPerSec": 702.2,
+  "p50LatencyMs": 645,
+  "p95LatencyMs": 1225,
+  "p99LatencyMs": 1275,
+  "totalDurationMs": 1424
+}
+```
+
+### 6.2. Порівняння з традиційними підходами
+*   **SQL-based Matching**: Використання `SELECT FOR UPDATE` в PostgreSQL для матчингу показує затримку > 200 мс при навантаженні 100 ордерів/сек через блокування таблиць.
+*   **Kafka Streams (Дане рішення)**: Завдяки локальному стану в RocksDB, затримка залишається стабільною навіть при збільшенні глибини стакану.
+
+---
+
+## 8. Системні Нюанси та Стабілізаційні Механізми
+Для запобігання безкінечного зростання "стакану" (Order Book Depth) та забезпечення ліквідності, впроваджено механізм **Excess Liquidity Clearing**.
+
+Коли сумарний об'єм на одній стороні стакану перевищує поріг (наприклад, 500 одиниць), система автоматично:
+1.  Знаходить найстаріші замовлення.
+2.  Виконує їх проти системного аккаунту-маркетмейкера (`SYSTEM_ACCOUNT_ID`).
+3.  Транслює оновлений стан ринку всім учасникам.
+
+---
+
+## 9. Встановлення та запуск
+
+### Попередні вимоги:
+*   **JDK 21** (Amazon Corretto рекомендовано)
+*   **Docker & Docker Compose** (для Kafka та PostgreSQL)
+*   **Node.js (v18+)**
+
+### Крок 1: Підготовка інфраструктури
 ```bash
+# Запуск контейнерів
 cd trading-engine
 docker-compose up -d
 ```
 
-### Run the Backend
-1. Configure environment variables (refer to `trading-engine/.env.example`).
-2. Build and run the Spring Boot application:
+### Крок 2: Запуск Backend
 ```bash
-cd trading-engine
+# Складання та запуск
 ./mvnw clean install
 ./mvnw spring-boot:run
 ```
 
-### Run the Frontend
-1. Navigate to the UI directory:
+### Крок 3: Запуск Frontend
 ```bash
 cd carbon-exchange-ui
 npm install
 npm run dev
 ```
-2. Open `http://localhost:5173` in your browser.
-
-## TODO & Future Improvements
-
-To enhance the project's academic depth and business utility, the following improvements are proposed:
-
-### 1. Advanced Matching Logic
-- [x] **Partial Order Matching**: Implement order splitting where a large order can be partially filled by multiple smaller opposite orders.
-- [x] **Limit vs. Market Orders**: Introduce market orders that execute immediately at the best available price.
-- [x] **Market Stabilization**: Automatically clear excess liquidity when the order book depth exceeds a threshold (25 orders) to prevent indefinite listing growth.
-
-### 2. Economic & Business Logic Quirks
-- **Carbon Dividend System**: Implement a mechanism where a small transaction fee (e.g., 0.5%) is collected and redistributed periodically to "Green" couriers as an incentive.
-- **Dynamic Pricing Curves**: Integrate an AMM (Automated Market Maker) logic for low-liquidity pairs to ensure there's always a price.
-- **Volatility Safeguards**: Implement "Circuit Breakers" that pause trading if the price of carbon credits fluctuates beyond a certain percentage in a short timeframe.
-
-### 3. Verification & Governance
-- **Proof of Offset**: Integrate a mock blockchain or third-party API to verify that the carbon credits being sold are legitimate and haven't been double-sold.
-- **Courier Reputation Score**: Develop an algorithm that ranks couriers based on their "Real-world Green Efficiency" and trading reliability.
-
-### 4. Technical Enhancements
-- [x] **Kafka Streams**: Move the matching logic into a Kafka Streams application for better scalability and fault tolerance.
-- [x] **End-to-End Testing**: Expand Vitest and JUnit coverage to include integration tests for the full order flow from UI to Database.
