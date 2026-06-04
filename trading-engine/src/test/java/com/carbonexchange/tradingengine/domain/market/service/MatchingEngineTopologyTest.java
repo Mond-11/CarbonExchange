@@ -108,27 +108,34 @@ class MatchingEngineTopologyTest {
 
     @Test
     void shouldClearExcessLiquidity() {
-        // Send 26 sell orders that don't match any buy
-        for (int i = 0; i < 26; i++) {
+        // Send orders that sum up to more than 500.0 volume
+        // Each order 10.0 volume -> 51 orders = 510.0 volume
+        UUID oldestId = null;
+        for (int i = 0; i < 51; i++) {
+            UUID id = UUID.randomUUID();
+            if (i == 0) oldestId = id;
             OrderRequest sellOrder = new OrderRequest(
-                    UUID.randomUUID(),
+                    id,
                     OrderRequest.OrderType.SELL,
                     OrderRequest.ExecutionMode.LIMIT,
-                    new BigDecimal("1.00"),
+                    new BigDecimal("10.00"),
                     new BigDecimal("100.00"),
-                    Instant.now()
+                    Instant.now().plusSeconds(i) // Ensure deterministic aging
             );
             inputTopic.pipeInput(sellOrder.courierId().toString(), sellOrder);
         }
 
-        // We expect at least one trade in the tradeOutputTopic (the 26th order should trigger clearing of the 1st)
+        // We expect at least one trade in the tradeOutputTopic (the 51st order should trigger clearing of the 1st/oldest)
         assertThat(tradeOutputTopic.isEmpty()).isFalse();
-        Trade clearingTrade = tradeOutputTopic.readRecordsToList().get(0).value();
+        Trade clearingTrade = tradeOutputTopic.readRecord().value();
         assertThat(clearingTrade.getBuyerId()).isEqualTo(UUID.fromString("00000000-0000-0000-0000-000000000000"));
+        assertThat(clearingTrade.getSellerId()).isEqualTo(oldestId);
         
-        // Also verify the snapshot size is limited
-        assertThat(snapshotOutputTopic.isEmpty()).isFalse();
-        OrderBookSnapshot lastSnapshot = snapshotOutputTopic.readRecordsToList().get(25).value();
-        assertThat(lastSnapshot.sellOrders()).hasSize(25);
+        // Also verify the snapshot volume is limited
+        OrderBookSnapshot lastSnapshot = snapshotOutputTopic.readRecordsToList().get(50).value();
+        BigDecimal totalVolume = lastSnapshot.sellOrders().stream()
+                .map(OrderRequest::amount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        assertThat(totalVolume).isLessThanOrEqualTo(new BigDecimal("500.0"));
     }
 }

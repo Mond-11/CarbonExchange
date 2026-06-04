@@ -61,7 +61,7 @@ function App() {
 
         stompClient.subscribe('/topic/trades', (message: { body: string; }) => {
           const newTrade: Trade = JSON.parse(message.body);
-          setTrades((prevTrades) => [newTrade, ...prevTrades].slice(0, 100));
+          setTrades((prevTrades) => [newTrade, ...prevTrades]);
           
           // Refresh user balance if they were involved in the trade
           const currentUser = userRef.current;
@@ -159,7 +159,7 @@ function App() {
             </Card>
             <Card className="panel-card shadow-sm border-0" style={{ borderLeft: '4px solid #ab47bc' }}>
               <Card.Body>
-                <AutoTrader />
+                <AutoTrader orderBook={orderBook} />
               </Card.Body>
             </Card>
           </Col>
@@ -235,7 +235,7 @@ function App() {
                             <tr><th>Time</th><th>Price</th><th>Amount</th></tr>
                           </thead>
                           <tbody>
-                            {trades.slice(0, 20).map((trade) => (
+                            {trades.map((trade) => (
                               <tr key={trade.id}>
                                 <td>
                                   { (trade.buyerId === SYSTEM_ID || trade.sellerId === SYSTEM_ID) && (

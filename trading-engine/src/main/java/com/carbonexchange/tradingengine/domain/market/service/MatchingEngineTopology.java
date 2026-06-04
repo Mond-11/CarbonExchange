@@ -82,7 +82,7 @@ public class MatchingEngineTopology {
 
     private static final String STORE_NAME = "order-book-store";
     private static final String GLOBAL_KEY = "GLOBAL_BOOK";
-    private static final int MAX_SIDE_DEPTH = 25;
+    private static final BigDecimal MAX_SIDE_VOLUME = new BigDecimal("500.0");
     private static final UUID SYSTEM_ACCOUNT_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     private static class MatchingProcessor extends ContextualProcessor<String, OrderRequest, String, Object> {
@@ -180,22 +180,43 @@ public class MatchingEngineTopology {
         }
 
         private void clearExcessLiquidity(PriorityQueue<OrderRequest> buyOrders, PriorityQueue<OrderRequest> sellOrders, OrderBookState state) {
-            while (buyOrders.size() > MAX_SIDE_DEPTH) {
-                OrderRequest topBuy = buyOrders.poll();
-                BigDecimal price = topBuy.price() != null ? topBuy.price() : state.getLastTradedPrice();
-                Trade trade = new Trade(topBuy.courierId(), SYSTEM_ACCOUNT_ID, price, topBuy.amount());
-                state.setLastTradedPrice(price);
-                context().forward(new Record<>(topBuy.courierId().toString(), trade, context().currentSystemTimeMs()));
-                log.info("System cleared excess BUY liquidity. Order: {}", topBuy.courierId());
+            clearSide(buyOrders, state, true);
+            clearSide(sellOrders, state, false);
+        }
+
+        private void clearSide(PriorityQueue<OrderRequest> queue, OrderBookState state, boolean isBuy) {
+            BigDecimal totalVolume = queue.stream()
+                    .map(OrderRequest::amount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            if (totalVolume.compareTo(MAX_SIDE_VOLUME) <= 0) {
+                return;
             }
 
-            while (sellOrders.size() > MAX_SIDE_DEPTH) {
-                OrderRequest topSell = sellOrders.poll();
-                BigDecimal price = topSell.price() != null ? topSell.price() : state.getLastTradedPrice();
-                Trade trade = new Trade(SYSTEM_ACCOUNT_ID, topSell.courierId(), price, topSell.amount());
+            log.info("Total {} volume {} exceeds limit {}. Clearing oldest orders.", 
+                    isBuy ? "BUY" : "SELL", totalVolume, MAX_SIDE_VOLUME);
+
+            // Sort by age (timestamp) to clear oldest first
+            List<OrderRequest> ordersByAge = new ArrayList<>(queue);
+            ordersByAge.sort(Comparator.comparing(OrderRequest::timestamp));
+
+            while (totalVolume.compareTo(MAX_SIDE_VOLUME) > 0 && !ordersByAge.isEmpty()) {
+                OrderRequest oldest = ordersByAge.remove(0);
+                queue.remove(oldest);
+                totalVolume = totalVolume.subtract(oldest.amount());
+
+                BigDecimal price = oldest.price() != null ? oldest.price() : state.getLastTradedPrice();
+                Trade trade;
+                if (isBuy) {
+                    trade = new Trade(oldest.courierId(), SYSTEM_ACCOUNT_ID, price, oldest.amount());
+                } else {
+                    trade = new Trade(SYSTEM_ACCOUNT_ID, oldest.courierId(), price, oldest.amount());
+                }
+                
                 state.setLastTradedPrice(price);
-                context().forward(new Record<>(topSell.courierId().toString(), trade, context().currentSystemTimeMs()));
-                log.info("System cleared excess SELL liquidity. Order: {}", topSell.courierId());
+                context().forward(new Record<>(oldest.courierId().toString(), trade, context().currentSystemTimeMs()));
+                log.info("System cleared {} liquidity from {}. Remaining volume: {}", 
+                        isBuy ? "BUY" : "SELL", oldest.courierId(), totalVolume);
             }
         }
 
