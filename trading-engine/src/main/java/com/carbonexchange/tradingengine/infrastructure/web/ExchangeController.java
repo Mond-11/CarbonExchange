@@ -9,12 +9,14 @@ import com.carbonexchange.tradingengine.domain.market.service.OrderProducer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/exchange")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:5173")
 public class ExchangeController {
 
     private final MatchingEngine matchingEngine;
