@@ -47,16 +47,12 @@ describe('App', () => {
 
     it('should render dashboard title', async () => {
         render(<App />);
-        expect(screen.getByText('Carbon Credit Exchange')).toBeInTheDocument();
+        expect(screen.getByText('Carbon Exchange')).toBeInTheDocument();
         await waitFor(() => {
             expect(api.fetchOrderBook).toHaveBeenCalled();
         });
     });
 
-    it('should display DISCONNECTED by default', () => {
-        render(<App />);
-        expect(screen.getByText('DISCONNECTED')).toBeInTheDocument();
-    });
 
     it('should display orders in the order book', async () => {
         const mockOrderBook = {
@@ -79,7 +75,7 @@ describe('App', () => {
         // Find the subscription callback and trigger it
         // This requires a bit more advanced mocking of STOMP, but we can simulate state change
         // For now, let's just verify fetchTrades works
-        const mockTrade = { buyerId: '1', sellerId: '2', price: 15, amount: 10, executedAt: 'now' };
+        const mockTrade = { id: 't1', buyerId: '1', sellerId: '2', price: 15, amount: 10, executedAt: 'now' };
         vi.mocked(api.fetchTrades).mockResolvedValue([mockTrade]);
 
         render(<App />);

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Form, Button, ButtonGroup, InputGroup, Alert } from 'react-bootstrap';
 import { placeOrder } from '../services/api';
 import type { OrderType, OrderRequest, ExecutionMode, User } from '../types';
 
@@ -14,7 +15,7 @@ export default function TradingForm({ user }: TradingFormProps) {
     const [executionMode, setExecutionMode] = useState<ExecutionMode>('LIMIT');
     const [price, setPrice] = useState<string>('');
     const [amount, setAmount] = useState<string>('');
-    const [status, setStatus] = useState<string | null>(null);
+    const [status, setStatus] = useState<{ type: 'success' | 'danger', message: string } | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -35,99 +36,117 @@ export default function TradingForm({ user }: TradingFormProps) {
 
         try {
             await placeOrder(orderPayload);
-            setStatus(`Successfully submitted ${type} order!`);
+            setStatus({ type: 'success', message: `Successfully submitted ${type} order!` });
             setPrice('');
             setAmount('');
 
-            setTimeout(() => setStatus(null), 2000);
+            setTimeout(() => setStatus(null), 3000);
         } catch (error) {
-            setStatus("Error: Could not reach the broker.");
+            setStatus({ type: 'danger', message: "Error: Could not reach the broker." });
         } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
-        <section className="panel trading-panel">
-            <h2>Place Order</h2>
-            <form onSubmit={handleSubmit} className="trading-form">
-
-                <div className="form-group">
-                    <label>Action</label>
-                    <div className="button-group">
-                        <button
-                            type="button"
-                            className={`type-btn ${type === 'BUY' ? 'active-buy' : ''}`}
+        <div>
+            <h5 className="mb-3 fw-bold text-body">Place Order</h5>
+            <Form onSubmit={handleSubmit}>
+                <Form.Group className="mb-3">
+                    <Form.Label className="small text-secondary fw-bold text-uppercase">Action</Form.Label>
+                    <ButtonGroup className="w-100 shadow-sm">
+                        <Button
+                            variant={type === 'BUY' ? 'success' : 'outline-secondary'}
                             onClick={() => setType('BUY')}
+                            className="fw-bold"
                         >
                             BUY
-                        </button>
-                        <button
-                            type="button"
-                            className={`type-btn ${type === 'SELL' ? 'active-sell' : ''}`}
+                        </Button>
+                        <Button
+                            variant={type === 'SELL' ? 'danger' : 'outline-secondary'}
                             onClick={() => setType('SELL')}
+                            className="fw-bold"
                         >
                             SELL
-                        </button>
-                    </div>
-                </div>
+                        </Button>
+                    </ButtonGroup>
+                </Form.Group>
 
-                <div className="form-group">
-                    <label>Order Type</label>
-                    <div className="button-group">
-                        <button
-                            type="button"
-                            className={`type-btn ${executionMode === 'LIMIT' ? 'active-limit' : ''}`}
+                <Form.Group className="mb-3">
+                    <Form.Label className="small text-secondary fw-bold text-uppercase">Order Type</Form.Label>
+                    <ButtonGroup className="w-100 shadow-sm">
+                        <Button
+                            variant={executionMode === 'LIMIT' ? 'primary' : 'outline-secondary'}
                             onClick={() => setExecutionMode('LIMIT')}
+                            size="sm"
                         >
                             LIMIT
-                        </button>
-                        <button
-                            type="button"
-                            className={`type-btn ${executionMode === 'MARKET' ? 'active-market' : ''}`}
+                        </Button>
+                        <Button
+                            variant={executionMode === 'MARKET' ? 'warning' : 'outline-secondary'}
                             onClick={() => setExecutionMode('MARKET')}
+                            size="sm"
                         >
                             MARKET
-                        </button>
-                    </div>
-                </div>
+                        </Button>
+                    </ButtonGroup>
+                </Form.Group>
 
                 {executionMode === 'LIMIT' && (
-                    <div className="form-group">
-                        <label htmlFor="price">Price ($)</label>
-                        <input
-                            id="price"
-                            type="number"
-                            step="0.01"
-                            min="0.01"
-                            value={price}
-                            onChange={(e) => setPrice(e.target.value)}
-                            placeholder="e.g. 10.50"
-                            required
-                        />
-                    </div>
+                    <Form.Group className="mb-3" controlId="price">
+                        <Form.Label className="small text-secondary fw-bold text-uppercase">Price</Form.Label>
+                        <InputGroup size="sm" className="shadow-sm">
+                            <InputGroup.Text className="text-secondary border-secondary">$</InputGroup.Text>
+                            <Form.Control
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                value={price}
+                                onChange={(e) => setPrice(e.target.value)}
+                                placeholder="0.00"
+                                required
+                                className="border-secondary"
+                            />
+                        </InputGroup>
+                    </Form.Group>
                 )}
 
-                <div className="form-group">
-                    <label htmlFor="amount">Amount (Credits)</label>
-                    <input
-                        id="amount"
-                        type="number"
-                        step="0.1"
-                        min="0.1"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder="e.g. 5"
-                        required
-                    />
-                </div>
+                <Form.Group className="mb-4" controlId="amount">
+                    <Form.Label className="small text-secondary fw-bold text-uppercase">Amount</Form.Label>
+                    <InputGroup size="sm" className="shadow-sm">
+                        <Form.Control
+                            type="number"
+                            step="0.1"
+                            min="0.1"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            placeholder="0.0"
+                            required
+                            className="border-secondary"
+                        />
+                        <InputGroup.Text className="text-secondary border-secondary">Credits</InputGroup.Text>
+                    </InputGroup>
+                </Form.Group>
 
-                <button type="submit" className="submit-btn" disabled={isSubmitting}>
-                    {isSubmitting ? 'Sending...' : 'SUBMIT ORDER'}
-                </button>
+                <Button 
+                    variant={type === 'BUY' ? 'success' : 'danger'} 
+                    type="submit" 
+                    className="w-100 fw-bold py-2 shadow" 
+                    disabled={isSubmitting}
+                >
+                    {isSubmitting ? (
+                        <>Sending...</>
+                    ) : (
+                        `PLACE ${type} ORDER`
+                    )}
+                </Button>
 
-                {status && <div className="status-message">{status}</div>}
-            </form>
-        </section>
+                {status && (
+                    <Alert variant={status.type} className="mt-3 small py-2 text-center">
+                        {status.message}
+                    </Alert>
+                )}
+            </Form>
+        </div>
     );
 }

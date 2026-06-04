@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Button, Form, ProgressBar, Badge, Alert } from 'react-bootstrap';
 import { placeOrder } from '../services/api';
 import { fetchAllUsers } from '../services/auth';
 import type { OrderRequest, User } from '../types';
@@ -58,42 +59,60 @@ export default function AutoTrader() {
     }, [isActive, speed, users]);
 
     return (
-        <section className="panel auto-trader-panel">
-            <h2>Market Maker Bot</h2>
-            <p style={{ color: '#888', fontSize: '0.85rem', marginBottom: '15px' }}>
+        <div>
+            <h5 className="mb-2 fw-bold d-flex align-items-center gap-2 text-body">
+                Market Maker Bot
+                <Badge bg={isActive ? 'success' : 'secondary'} pill style={{ fontSize: '0.6rem' }}>
+                    {isActive ? 'RUNNING' : 'IDLE'}
+                </Badge>
+            </h5>
+            <p className="text-secondary small mb-3">
                 Simulates active market participants to generate real-time order flow and execution data.
             </p>
 
-            <div className="bot-controls">
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#888', fontSize: '0.8rem' }}>
-                    <span>Orders Placed: {ordersPlaced}</span>
-                    {lastError && <span style={{ color: '#ff5252' }}>Error: {lastError}</span>}
+            <div className="mb-3">
+                <div className="d-flex justify-content-between mb-2">
+                    <span className="small text-secondary fw-bold">Speed: {speed} orders/sec</span>
+                    <span className="small text-secondary fw-bold">Total: {ordersPlaced}</span>
                 </div>
-                <div className="speed-control">
-                    <label>Speed: {speed} orders/sec</label>
-                    <input
-                        type="range"
-                        min="1"
-                        max="10"
-                        value={speed}
-                        onChange={(e) => setSpeed(Number(e.target.value))}
-                        disabled={isActive}
-                    />
-                </div>
-
-                <button
-                    className={`bot-btn ${isActive ? 'bot-active' : 'bot-inactive'}`}
-                    onClick={() => {
-                        setIsActive(!isActive);
-                        if (!isActive) {
-                            setOrdersPlaced(0);
-                            setLastError(null);
-                        }
-                    }}
-                >
-                    {isActive ? 'STOP BOT' : 'START BOT'}
-                </button>
+                <Form.Range
+                    min="1"
+                    max="10"
+                    value={speed}
+                    onChange={(e) => setSpeed(Number(e.target.value))}
+                    disabled={isActive}
+                />
             </div>
-        </section>
+
+            {isActive && (
+                <ProgressBar 
+                    animated 
+                    now={100} 
+                    variant="info" 
+                    className="mb-3" 
+                    style={{ height: '4px' }}
+                />
+            )}
+
+            {lastError && (
+                <Alert variant="danger" className="py-1 px-2 small mb-3">
+                    {lastError}
+                </Alert>
+            )}
+
+            <Button
+                variant={isActive ? 'outline-danger' : 'outline-info'}
+                className={`w-100 fw-bold py-2 ${isActive ? 'bot-active' : ''}`}
+                onClick={() => {
+                    setIsActive(!isActive);
+                    if (!isActive) {
+                        setOrdersPlaced(0);
+                        setLastError(null);
+                    }
+                }}
+            >
+                {isActive ? 'STOP SIMULATION' : 'START SIMULATION'}
+            </Button>
+        </div>
     );
 }

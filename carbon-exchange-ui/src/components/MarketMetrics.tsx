@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Row, Col, Card, Form } from 'react-bootstrap';
 import type { Trade, OrderBookSnapshot } from '../types';
 
 interface MarketMetricsProps {
@@ -39,33 +40,47 @@ const MarketMetrics: React.FC<MarketMetricsProps> = ({ trades, orderBook }) => {
     }, [trades, volSelection]);
 
     return (
-        <div className="metrics-banner">
-            <div className="metric-item">
-                <span className="metric-label">LTP</span>
-                <span className="metric-value">${ltp.toFixed(2)}</span>
-            </div>
-            <div className="metric-item">
-                <span className="metric-label">SPREAD</span>
-                <span className="metric-value">
-                    {spread !== null ? `$${spread.toFixed(2)}` : 'N/A'}
-                </span>
-            </div>
-            <div className="metric-item">
-                <div className="metric-label-group">
-                    <span className="metric-label">VOLUME</span>
-                    <select 
-                        value={volSelection} 
-                        onChange={(e) => setVolSelection(e.target.value as TimeSelection)}
-                        className="vol-selector"
-                    >
-                        <option value="1M">1 MIN</option>
-                        <option value="1H">1 HR</option>
-                        <option value="1D">1 DAY</option>
-                    </select>
-                </div>
-                <span className="metric-value">{volumeValue.toFixed(1)}</span>
-            </div>
-        </div>
+        <Row className="mb-4 g-3">
+            <Col sm={4}>
+                <Card className="metric-card shadow-sm border-0 text-center py-2 h-100">
+                    <Card.Body className="p-2">
+                        <div className="text-secondary small fw-bold text-uppercase mb-1" style={{ letterSpacing: '1px' }}>Last Traded Price</div>
+                        <h4 className="text-success mb-0 fw-bold">${ltp.toFixed(2)}</h4>
+                    </Card.Body>
+                </Card>
+            </Col>
+            <Col sm={4}>
+                <Card className="metric-card shadow-sm border-0 text-center py-2 h-100">
+                    <Card.Body className="p-2">
+                        <div className="text-secondary small fw-bold text-uppercase mb-1" style={{ letterSpacing: '1px' }}>Market Spread</div>
+                        <h4 className="text-primary mb-0 fw-bold">
+                            {spread !== null ? `$${spread.toFixed(2)}` : 'N/A'}
+                        </h4>
+                    </Card.Body>
+                </Card>
+            </Col>
+            <Col sm={4}>
+                <Card className="metric-card shadow-sm border-0 text-center py-2 h-100">
+                    <Card.Body className="p-2">
+                        <div className="d-flex justify-content-center align-items-center gap-2 mb-1">
+                            <div className="text-secondary small fw-bold text-uppercase" style={{ letterSpacing: '1px' }}>Volume</div>
+                            <Form.Select 
+                                size="sm" 
+                                className="bg-transparent border-0 text-secondary fw-bold p-0 w-auto" 
+                                style={{ fontSize: '0.7rem' }}
+                                value={volSelection}
+                                onChange={(e) => setVolSelection(e.target.value as TimeSelection)}
+                            >
+                                <option value="1M">1M</option>
+                                <option value="1H">1H</option>
+                                <option value="1D">1D</option>
+                            </Form.Select>
+                        </div>
+                        <h4 className="text-info mb-0 fw-bold">{volumeValue.toFixed(1)} <small className="fs-6">Credits</small></h4>
+                    </Card.Body>
+                </Card>
+            </Col>
+        </Row>
     );
 };
 

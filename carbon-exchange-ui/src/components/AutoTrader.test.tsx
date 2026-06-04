@@ -26,7 +26,7 @@ describe('AutoTrader', () => {
     it('should render bot controls', async () => {
         render(<AutoTrader />);
         expect(screen.getByText('Market Maker Bot')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'START BOT' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'START SIMULATION' })).toBeInTheDocument();
     });
 
     it('should start and stop the bot', async () => {
@@ -37,17 +37,17 @@ describe('AutoTrader', () => {
         // Wait for users to be fetched (Promises need to resolve even with fake timers)
         await vi.runAllTimersAsync();
         
-        const startBtn = screen.getByRole('button', { name: 'START BOT' });
+        const startBtn = screen.getByRole('button', { name: 'START SIMULATION' });
         fireEvent.click(startBtn);
-        expect(screen.getByRole('button', { name: 'STOP BOT' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'STOP SIMULATION' })).toBeInTheDocument();
 
         // Advance timers to trigger interval (speed is 2, so every 500ms)
         await vi.advanceTimersByTimeAsync(501);
         
         expect(api.placeOrder).toHaveBeenCalledTimes(1);
 
-        fireEvent.click(screen.getByRole('button', { name: 'STOP BOT' }));
-        expect(screen.getByRole('button', { name: 'START BOT' })).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: 'STOP SIMULATION' }));
+        expect(screen.getByRole('button', { name: 'START SIMULATION' })).toBeInTheDocument();
         
         await vi.advanceTimersByTimeAsync(1000);
         expect(api.placeOrder).toHaveBeenCalledTimes(1);
