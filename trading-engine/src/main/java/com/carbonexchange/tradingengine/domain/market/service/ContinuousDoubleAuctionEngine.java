@@ -3,6 +3,7 @@ package com.carbonexchange.tradingengine.domain.market.service;
 import com.carbonexchange.tradingengine.domain.market.model.OrderBookSnapshot;
 import com.carbonexchange.tradingengine.domain.market.model.OrderRequest;
 import com.carbonexchange.tradingengine.domain.market.model.Trade;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,9 @@ import java.util.PriorityQueue;
 public class ContinuousDoubleAuctionEngine implements MatchingEngine {
 
     private final EntityManager entityManager;
+
+    // The WebSocket messenger injected perfectly
+    private final SimpMessagingTemplate messagingTemplate;
 
     // Max-Heap: Highest buy price gets priority
     private final PriorityQueue<OrderRequest> buyOrders = new PriorityQueue<>(
@@ -44,6 +48,9 @@ public class ContinuousDoubleAuctionEngine implements MatchingEngine {
         }
 
         matchOrders();
+
+        // BROADCAST 1: Send the updated order book state to React every time the queues change
+        messagingTemplate.convertAndSend("/topic/orderbook", getOrderBookSnapshot());
     }
 
     /**
@@ -69,8 +76,7 @@ public class ContinuousDoubleAuctionEngine implements MatchingEngine {
                     ? highestBuy.price()
                     : lowestSell.price();
 
-            // Determine the quantity exchanged (for simplicity here, assuming 1 order = 1 route credit chunk)
-            // In a production system, you'd calculate partial fills here.
+            // Determine the quantity exchanged
             BigDecimal executionAmount = highestBuy.amount().min(lowestSell.amount());
 
             Trade trade = new Trade(highestBuy.courierId(), lowestSell.courierId(), executionPrice, executionAmount);
@@ -81,7 +87,13 @@ public class ContinuousDoubleAuctionEngine implements MatchingEngine {
             log.info("Trade Executed! Buyer: {}, Seller: {}, Price: {}",
                     trade.getBuyerId(), trade.getSellerId(), executionPrice);
 
-            // TODO: In the future, publish this trade event to Kafka so WebSockets can broadcast it.
+            // BROADCAST 2: Send the newly executed trade directly to the React history table
+            messagingTemplate.convertAndSend("/topic/trades", trade);
+
+            // NOTE 1 order = 1 chunk.
+            // If implement partial fills later (e.g., Buy 5, Sell 3, leaving 2 remaining),
+            // mathematically subtract the executionAmount and re-insert
+            // the remaining OrderRequest back into the buyOrders or sellOrders queue right here.
         }
     }
 
@@ -90,6 +102,9 @@ public class ContinuousDoubleAuctionEngine implements MatchingEngine {
         buyOrders.clear();
         sellOrders.clear();
         log.info("Order book flushed.");
+
+        // BROADCAST 3: Clear the React UI when the market is flushed
+        messagingTemplate.convertAndSend("/topic/orderbook", getOrderBookSnapshot());
     }
 
     @Override
