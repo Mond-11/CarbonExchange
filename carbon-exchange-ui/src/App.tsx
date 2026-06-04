@@ -63,7 +63,7 @@ function App() {
 
         stompClient.subscribe('/topic/trades', (message: { body: string; }) => {
           const newTrade: Trade = JSON.parse(message.body);
-          setTrades((prevTrades) => [newTrade, ...prevTrades]);
+          setTrades((prevTrades) => [newTrade, ...prevTrades].slice(0, 30));
           
           // Refresh user balance if they were involved in the trade
           const currentUser = userRef.current;

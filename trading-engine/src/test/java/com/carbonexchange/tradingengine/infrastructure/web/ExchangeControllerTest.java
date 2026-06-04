@@ -78,7 +78,7 @@ class ExchangeControllerTest {
 
     @Test
     void shouldGetTradeHistory() throws Exception {
-        when(tradeRepository.findAll()).thenReturn(List.of());
+        when(tradeRepository.findTop30ByOrderByExecutedAtDesc()).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/exchange/trades"))
                 .andExpect(status().isOk())

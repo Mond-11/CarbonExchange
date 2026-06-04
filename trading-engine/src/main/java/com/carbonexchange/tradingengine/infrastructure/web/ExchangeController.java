@@ -75,7 +75,7 @@ public class ExchangeController {
      */
     @GetMapping("/trades")
     public ResponseEntity<List<Trade>> getTradeHistory() {
-        return ResponseEntity.ok(tradeRepository.findAll());
+        return ResponseEntity.ok(tradeRepository.findTop30ByOrderByExecutedAtDesc());
     }
 
     /**
