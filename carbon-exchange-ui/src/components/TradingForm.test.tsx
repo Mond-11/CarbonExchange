@@ -7,13 +7,20 @@ vi.mock('../services/api', () => ({
     placeOrder: vi.fn(),
 }));
 
+const mockUser = {
+    id: 'user-123',
+    username: 'testuser',
+    moneyBalance: 1000,
+    creditBalance: 100
+};
+
 describe('TradingForm', () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
     it('should render form elements', () => {
-        render(<TradingForm />);
+        render(<TradingForm user={mockUser} />);
         expect(screen.getByText('Place Order')).toBeInTheDocument();
         expect(screen.getByLabelText('Price ($)')).toBeInTheDocument();
         expect(screen.getByLabelText('Amount (Credits)')).toBeInTheDocument();
@@ -21,7 +28,7 @@ describe('TradingForm', () => {
     });
 
     it('should change order type', () => {
-        render(<TradingForm />);
+        render(<TradingForm user={mockUser} />);
         const sellBtn = screen.getByRole('button', { name: 'SELL' });
         fireEvent.click(sellBtn);
         expect(sellBtn).toHaveClass('active-sell');
@@ -32,7 +39,7 @@ describe('TradingForm', () => {
     });
 
     it('should change execution mode', () => {
-        render(<TradingForm />);
+        render(<TradingForm user={mockUser} />);
         const marketBtn = screen.getByRole('button', { name: 'MARKET' });
         fireEvent.click(marketBtn);
         expect(marketBtn).toHaveClass('active-market');
@@ -46,7 +53,7 @@ describe('TradingForm', () => {
 
     it('should submit order successfully', async () => {
         vi.mocked(api.placeOrder).mockResolvedValue(undefined);
-        render(<TradingForm />);
+        render(<TradingForm user={mockUser} />);
 
         fireEvent.change(screen.getByLabelText('Price ($)'), { target: { value: '10.50' } });
         fireEvent.change(screen.getByLabelText('Amount (Credits)'), { target: { value: '5' } });
@@ -54,6 +61,7 @@ describe('TradingForm', () => {
 
         await waitFor(() => {
             expect(api.placeOrder).toHaveBeenCalledWith(expect.objectContaining({
+                courierId: 'user-123',
                 price: 10.50,
                 amount: 5,
                 type: 'BUY',
@@ -66,7 +74,7 @@ describe('TradingForm', () => {
 
     it('should submit market order successfully', async () => {
         vi.mocked(api.placeOrder).mockResolvedValue(undefined);
-        render(<TradingForm />);
+        render(<TradingForm user={mockUser} />);
 
         fireEvent.click(screen.getByRole('button', { name: 'MARKET' }));
         fireEvent.change(screen.getByLabelText('Amount (Credits)'), { target: { value: '5' } });
@@ -74,6 +82,7 @@ describe('TradingForm', () => {
 
         await waitFor(() => {
             expect(api.placeOrder).toHaveBeenCalledWith(expect.objectContaining({
+                courierId: 'user-123',
                 price: null,
                 amount: 5,
                 type: 'BUY',
@@ -84,7 +93,7 @@ describe('TradingForm', () => {
 
     it('should handle submission error', async () => {
         vi.mocked(api.placeOrder).mockRejectedValue(new Error('Network Error'));
-        render(<TradingForm />);
+        render(<TradingForm user={mockUser} />);
 
         fireEvent.change(screen.getByLabelText('Price ($)'), { target: { value: '10.50' } });
         fireEvent.change(screen.getByLabelText('Amount (Credits)'), { target: { value: '5' } });

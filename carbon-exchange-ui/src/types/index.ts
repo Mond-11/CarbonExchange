@@ -25,3 +25,10 @@ export interface Trade {
     amount: number;
     executedAt: string;
 }
+
+export interface User {
+    id: string;
+    username: string;
+    moneyBalance: number;
+    creditBalance: number;
+}

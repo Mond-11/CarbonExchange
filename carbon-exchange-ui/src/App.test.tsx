@@ -2,10 +2,20 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import App from './App';
 import * as api from './services/api';
+import * as auth from './services/auth';
 
 vi.mock('./services/api', () => ({
     fetchOrderBook: vi.fn(),
     fetchTrades: vi.fn(),
+}));
+
+vi.mock('./services/auth', () => ({
+    getCurrentUser: vi.fn(),
+    logout: vi.fn(),
+    fetchUser: vi.fn(),
+    fetchAllUsers: vi.fn(),
+    login: vi.fn(),
+    register: vi.fn(),
 }));
 
 vi.mock('@stomp/stompjs', () => {
@@ -31,6 +41,7 @@ describe('App', () => {
         vi.clearAllMocks();
         vi.mocked(api.fetchOrderBook).mockResolvedValue({ buyOrders: [], sellOrders: [] });
         vi.mocked(api.fetchTrades).mockResolvedValue([]);
+        vi.mocked(auth.getCurrentUser).mockReturnValue(null);
     });
 
     it('should render dashboard title', async () => {

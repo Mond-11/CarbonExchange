@@ -113,6 +113,66 @@ input:focus { outline: none; border-color: #007bff; }
   font-weight: bold;
 }
 
+/* --- Auth Styling --- */
+.auth-container {
+  max-width: 400px;
+  margin: 100px auto;
+}
+
+.auth-toggle {
+  text-align: center;
+  margin-top: 15px;
+  color: #888;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #4caf50;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background-color: #222;
+  padding: 5px 15px;
+  border-radius: 20px;
+}
+
+.balance-group {
+  display: flex;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.balance-money { color: #4caf50; }
+.balance-credits { color: #2196f3; }
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid #444;
+  color: #888;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background-color: #333;
+  color: #fff;
+}
+
+.error-message {
+  color: #f44336;
+  font-size: 0.8rem;
+  margin-bottom: 10px;
+}
+
 /* --- Layout Adjustments --- */
 .controls-column { display: flex; flex-direction: column; gap: 20px; flex: 0.5; }
 

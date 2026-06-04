@@ -1,19 +1,15 @@
 import { useState } from 'react';
 import { placeOrder } from '../services/api';
-import type { OrderType, OrderRequest, ExecutionMode } from '../types';
+import type { OrderType, OrderRequest, ExecutionMode, User } from '../types';
 
-const generateId = () => {
-    try {
-        return crypto.randomUUID();
-    } catch {
-        return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    }
-};
+interface TradingFormProps {
+    user: User;
+}
 
 /**
  * A form component for placing buy or sell orders on the exchange.
  */
-export default function TradingForm() {
+export default function TradingForm({ user }: TradingFormProps) {
     const [type, setType] = useState<OrderType>('BUY');
     const [executionMode, setExecutionMode] = useState<ExecutionMode>('LIMIT');
     const [price, setPrice] = useState<string>('');
@@ -29,7 +25,7 @@ export default function TradingForm() {
         setStatus(null);
 
         const orderPayload: OrderRequest = {
-            courierId: generateId(),
+            courierId: user.id,
             type: type,
             executionMode: executionMode,
             price: executionMode === 'LIMIT' ? parseFloat(price) : null,

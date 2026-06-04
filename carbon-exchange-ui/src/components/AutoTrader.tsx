@@ -1,14 +1,7 @@
 import { useState, useEffect } from 'react';
 import { placeOrder } from '../services/api';
-import type { OrderRequest } from '../types';
-
-const generateId = () => {
-    try {
-        return crypto.randomUUID();
-    } catch {
-        return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    }
-};
+import { fetchAllUsers } from '../services/auth';
+import type { OrderRequest, User } from '../types';
 
 /**
  * A component that simulates a market maker bot.
@@ -19,11 +12,20 @@ export default function AutoTrader() {
     const [speed, setSpeed] = useState(2); // Default: 2 orders per second
     const [ordersPlaced, setOrdersPlaced] = useState(0);
     const [lastError, setLastError] = useState<string | null>(null);
+    const [users, setUsers] = useState<User[]>([]);
 
     useEffect(() => {
-        if (!isActive) return;
+        fetchAllUsers().then(setUsers).catch(err => {
+            console.error("Failed to fetch users for bot:", err);
+            setLastError("Failed to fetch users");
+        });
+    }, []);
+
+    useEffect(() => {
+        if (!isActive || users.length === 0) return;
 
         const interval = setInterval(() => {
+            const randomUser = users[Math.floor(Math.random() * users.length)];
             const type = Math.random() > 0.5 ? 'BUY' : 'SELL';
 
             const randomPrice = (12.00 + (Math.random() * 4 - 2)).toFixed(2);
@@ -31,7 +33,7 @@ export default function AutoTrader() {
             const randomAmount = (Math.random() * 4 + 1).toFixed(1);
 
             const orderPayload: OrderRequest = {
-                courierId: generateId(),
+                courierId: randomUser.id,
                 type: type,
                 executionMode: 'LIMIT',
                 price: parseFloat(randomPrice),
