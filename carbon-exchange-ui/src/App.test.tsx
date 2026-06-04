@@ -18,6 +18,14 @@ vi.mock('@stomp/stompjs', () => {
     };
 });
 
+vi.mock('recharts', async () => {
+    const Actual = await vi.importActual('recharts') as any;
+    return {
+        ...Actual,
+        ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
+    };
+});
+
 describe('App', () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -65,7 +73,7 @@ describe('App', () => {
         render(<App />);
 
         await waitFor(() => {
-            expect(screen.getByText('$15.00')).toBeInTheDocument();
+            expect(screen.getAllByText('$15.00')[0]).toBeInTheDocument();
         });
     });
 });

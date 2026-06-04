@@ -4,6 +4,8 @@ import { fetchOrderBook, fetchTrades } from './services/api';
 import type { OrderBookSnapshot, Trade } from './types';
 import TradingForm from './components/TradingForm';
 import AutoTrader from './components/AutoTrader';
+import MarketMetrics from './components/MarketMetrics';
+import PriceChart from './components/PriceChart';
 import './App.css';
 
 const SYSTEM_ID = "00000000-0000-0000-0000-000000000000";
@@ -31,7 +33,7 @@ function App() {
 
         stompClient.subscribe('/topic/trades', (message: { body: string; }) => {
           const newTrade: Trade = JSON.parse(message.body);
-          setTrades((prevTrades) => [newTrade, ...prevTrades].slice(0, 15));
+          setTrades((prevTrades) => [newTrade, ...prevTrades].slice(0, 100));
         });
 
         stompClient.subscribe('/topic/orderbook', (message: { body: string; }) => {
@@ -65,6 +67,8 @@ function App() {
           </div>
           {error && <div className="error-banner">{error}</div>}
         </header>
+
+        <MarketMetrics trades={trades} orderBook={orderBook} />
 
         <div className="market-layout">
 
@@ -108,8 +112,10 @@ function App() {
           </section>
 
           <section className="panel">
-            <h2>Recent Trades</h2>
+            <h2>Market Activity</h2>
+            <PriceChart trades={trades} />
             <div className="trade-history">
+              <h3>Recent Trades</h3>
               <table>
                 <thead>
                 <tr>
