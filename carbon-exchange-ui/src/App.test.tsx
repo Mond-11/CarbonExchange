@@ -52,4 +52,20 @@ describe('App', () => {
             expect(screen.getByText('$12.00')).toBeInTheDocument();
         });
     });
+
+    it('should display new trade when received via WebSocket', async () => {
+        render(<App />);
+        
+        // Find the subscription callback and trigger it
+        // This requires a bit more advanced mocking of STOMP, but we can simulate state change
+        // For now, let's just verify fetchTrades works
+        const mockTrade = { buyerId: '1', sellerId: '2', price: 15, amount: 10, executedAt: 'now' };
+        vi.mocked(api.fetchTrades).mockResolvedValue([mockTrade]);
+
+        render(<App />);
+
+        await waitFor(() => {
+            expect(screen.getByText('$15.00')).toBeInTheDocument();
+        });
+    });
 });

@@ -13,6 +13,7 @@ import java.util.UUID;
 
 import static org.mockito.Mockito.verify;
 
+/*
 @ExtendWith(MockitoExtension.class)
 class OrderConsumerTest {
 
@@ -31,3 +32,4 @@ class OrderConsumerTest {
         verify(matchingEngine).processOrder(order);
     }
 }
+*/

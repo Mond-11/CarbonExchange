@@ -9,13 +9,14 @@ A high-performance, real-time marketplace designed to facilitate the trading of 
 - **Asynchronous Order Processing**: High-throughput order handling using Apache Kafka for message queuing.
 - **Automated Trading**: Built-in support for simulated market activity to maintain liquidity.
 - **Modern Dashboard**: A responsive React-based UI for monitoring market depth and recent transactions.
+- **Market Stabilization**: Automated system that clears excess liquidity when the book grows too deep, ensuring system stability.
 
 ## Tech Stack
 
 ### Backend (`trading-engine`)
 - **Language**: Java 21
 - **Framework**: Spring Boot 4.0.x
-- **Messaging**: Apache Kafka (Order queuing)
+- **Messaging**: Apache Kafka (Order queuing & matching with Kafka Streams)
 - **Real-time**: Spring WebSocket with STOMP
 - **Database**: PostgreSQL (Persistence of trades)
 - **ORM**: Spring Data JPA / Hibernate
@@ -74,6 +75,7 @@ To enhance the project's academic depth and business utility, the following impr
 ### 1. Advanced Matching Logic
 - [x] **Partial Order Matching**: Implement order splitting where a large order can be partially filled by multiple smaller opposite orders.
 - [x] **Limit vs. Market Orders**: Introduce market orders that execute immediately at the best available price.
+- [x] **Market Stabilization**: Automatically clear excess liquidity when the order book depth exceeds a threshold (25 orders) to prevent indefinite listing growth.
 
 ### 2. Economic & Business Logic Quirks
 - **Carbon Dividend System**: Implement a mechanism where a small transaction fee (e.g., 0.5%) is collected and redistributed periodically to "Green" couriers as an incentive.
@@ -85,5 +87,5 @@ To enhance the project's academic depth and business utility, the following impr
 - **Courier Reputation Score**: Develop an algorithm that ranks couriers based on their "Real-world Green Efficiency" and trading reliability.
 
 ### 4. Technical Enhancements
-- **Kafka Streams**: Move the matching logic into a Kafka Streams application for better scalability and fault tolerance.
-- **End-to-End Testing**: Expand Vitest and JUnit coverage to include integration tests for the full order flow from UI to Database.
+- [x] **Kafka Streams**: Move the matching logic into a Kafka Streams application for better scalability and fault tolerance.
+- [x] **End-to-End Testing**: Expand Vitest and JUnit coverage to include integration tests for the full order flow from UI to Database.

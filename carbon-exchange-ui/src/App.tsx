@@ -6,6 +6,8 @@ import TradingForm from './components/TradingForm';
 import AutoTrader from './components/AutoTrader';
 import './App.css';
 
+const SYSTEM_ID = "00000000-0000-0000-0000-000000000000";
+
 /**
  * Main application component for the Carbon Credit Exchange dashboard.
  * Handles WebSocket connections and manages the state for the order book and trade history.
@@ -119,7 +121,12 @@ function App() {
                 <tbody>
                 {trades.slice(0, 15).map((trade) => (
                     <tr key={trade.id}>
-                      <td>{new Date(trade.executedAt).toLocaleTimeString()}</td>
+                      <td>
+                        { (trade.buyerId === SYSTEM_ID || trade.sellerId === SYSTEM_ID) && (
+                            <span className="system-tag">STABILIZER</span>
+                        )}
+                        {new Date(trade.executedAt).toLocaleTimeString()}
+                      </td>
                       <td className="trade-price">${Number(trade.price).toFixed(2)}</td>
                       <td>{Number(trade.amount).toFixed(2)}</td>
                     </tr>

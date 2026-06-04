@@ -2,6 +2,14 @@ import { useState, useEffect } from 'react';
 import { placeOrder } from '../services/api';
 import type { OrderRequest } from '../types';
 
+const generateId = () => {
+    try {
+        return crypto.randomUUID();
+    } catch {
+        return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    }
+};
+
 /**
  * A component that simulates a market maker bot.
  * Automatically generates and places random buy and sell orders at a specified speed.
@@ -9,6 +17,8 @@ import type { OrderRequest } from '../types';
 export default function AutoTrader() {
     const [isActive, setIsActive] = useState(false);
     const [speed, setSpeed] = useState(2); // Default: 2 orders per second
+    const [ordersPlaced, setOrdersPlaced] = useState(0);
+    const [lastError, setLastError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!isActive) return;
@@ -21,7 +31,7 @@ export default function AutoTrader() {
             const randomAmount = (Math.random() * 4 + 1).toFixed(1);
 
             const orderPayload: OrderRequest = {
-                courierId: crypto.randomUUID(),
+                courierId: generateId(),
                 type: type,
                 executionMode: 'LIMIT',
                 price: parseFloat(randomPrice),
@@ -29,7 +39,15 @@ export default function AutoTrader() {
                 timestamp: new Date().toISOString()
             };
 
-            placeOrder(orderPayload).catch(err => console.error("Bot encountered network error:", err));
+            placeOrder(orderPayload)
+                .then(() => {
+                    setOrdersPlaced(prev => prev + 1);
+                    setLastError(null);
+                })
+                .catch(err => {
+                    console.error("Bot encountered network error:", err);
+                    setLastError(err.message || "Network Error");
+                });
 
         }, 1000 / speed);
 
@@ -45,6 +63,10 @@ export default function AutoTrader() {
             </p>
 
             <div className="bot-controls">
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#888', fontSize: '0.8rem' }}>
+                    <span>Orders Placed: {ordersPlaced}</span>
+                    {lastError && <span style={{ color: '#ff5252' }}>Error: {lastError}</span>}
+                </div>
                 <div className="speed-control">
                     <label>Speed: {speed} orders/sec</label>
                     <input
@@ -59,7 +81,13 @@ export default function AutoTrader() {
 
                 <button
                     className={`bot-btn ${isActive ? 'bot-active' : 'bot-inactive'}`}
-                    onClick={() => setIsActive(!isActive)}
+                    onClick={() => {
+                        setIsActive(!isActive);
+                        if (!isActive) {
+                            setOrdersPlaced(0);
+                            setLastError(null);
+                        }
+                    }}
                 >
                     {isActive ? 'STOP BOT' : 'START BOT'}
                 </button>
