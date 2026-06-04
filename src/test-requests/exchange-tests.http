@@ -1,0 +1,29 @@
+### Place a SELL Order (E-Bike)
+POST http://localhost:8080/api/v1/exchange/order
+Content-Type: application/json
+
+{
+  "courierId": "11111111-1111-1111-1111-111111111111",
+  "type": "SELL",
+  "amount": 5.0,
+  "price": 10.00,
+  "timestamp": "2026-06-04T10:00:00Z"
+}
+
+### Place a BUY Order (Gas Van)
+POST http://localhost:8080/api/v1/exchange/order
+Content-Type: application/json
+
+{
+  "courierId": "22222222-2222-2222-2222-222222222222",
+  "type": "BUY",
+  "amount": 5.0,
+  "price": 12.00,
+  "timestamp": "2026-06-04T10:00:01Z"
+}
+
+### View the Order Book
+GET http://localhost:8080/api/v1/exchange/orderbook
+
+### View Trade History
+GET http://localhost:8080/api/v1/exchange/trades

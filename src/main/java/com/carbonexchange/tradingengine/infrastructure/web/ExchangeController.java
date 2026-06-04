@@ -5,6 +5,7 @@ import com.carbonexchange.tradingengine.domain.market.model.OrderRequest;
 import com.carbonexchange.tradingengine.domain.market.model.Trade;
 import com.carbonexchange.tradingengine.domain.market.repository.TradeRepository;
 import com.carbonexchange.tradingengine.domain.market.service.MatchingEngine;
+import com.carbonexchange.tradingengine.domain.market.service.OrderProducer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,14 +18,15 @@ import java.util.List;
 public class ExchangeController {
 
     private final MatchingEngine matchingEngine;
-    private final TradeRepository tradeRepository; // <-- Added this
+    private final TradeRepository tradeRepository;
+    private final OrderProducer orderProducer;
 
     @PostMapping("/order")
     public ResponseEntity<String> placeOrder(@RequestBody OrderRequest order) {
-        matchingEngine.processOrder(order);
-        return ResponseEntity.ok("Order processed.");
-    }
+        orderProducer.sendOrder(order);
 
+        return ResponseEntity.accepted().body("Order received and queued for processing.");
+    }
 
     @GetMapping("/orderbook")
     public ResponseEntity<OrderBookSnapshot> getOrderBook() {
