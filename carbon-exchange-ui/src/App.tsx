@@ -4,6 +4,7 @@ import { Client } from '@stomp/stompjs';
 import { fetchOrderBook, fetchTrades } from './services/api';
 import type { OrderBookSnapshot, Trade } from './types';
 import TradingForm from './components/TradingForm';
+import AutoTrader from './components/AutoTrader';
 import './App.css';
 
 function App() {
@@ -69,8 +70,11 @@ function App() {
 
         <div className="market-layout">
 
-          {/* Left Column: The Trading Form */}
-          <TradingForm />
+          {/* Left Column: Controls (Stacked) */}
+          <div className="controls-column">
+            <TradingForm />
+            <AutoTrader />
+          </div>
 
           {/* Middle Column: The Order Book */}
           <section className="panel">
