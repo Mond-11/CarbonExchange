@@ -11,7 +11,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/exchange")
@@ -34,6 +37,25 @@ public class ExchangeController {
         orderProducer.sendOrder(order);
 
         return ResponseEntity.accepted().body("Order received and queued for processing.");
+    }
+
+    /**
+     * Triggers an emergency resolve of all ongoing orders.
+     * 
+     * @return a response entity indicating the command has been issued
+     */
+    @PostMapping("/emergency-resolve")
+    public ResponseEntity<String> emergencyResolve() {
+        OrderRequest clearAll = new OrderRequest(
+                UUID.fromString("00000000-0000-0000-0000-000000000000"),
+                OrderRequest.OrderType.CLEAR_ALL,
+                OrderRequest.ExecutionMode.LIMIT,
+                BigDecimal.ONE,
+                BigDecimal.ZERO,
+                Instant.now()
+        );
+        orderProducer.sendOrder(clearAll);
+        return ResponseEntity.ok("Emergency resolve command issued.");
     }
 
     /**

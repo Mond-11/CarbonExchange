@@ -110,14 +110,20 @@ public class MatchingEngineTopology {
             buyOrders.addAll(state.getBuyOrders());
             sellOrders.addAll(state.getSellOrders());
 
-            if (order.type() == OrderRequest.OrderType.BUY) {
+            if (order.type() == OrderRequest.OrderType.CLEAR_ALL) {
+                log.warn("Emergency Clear All triggered! Matching all existing orders against SYSTEM account.");
+                clearSide(buyOrders, state, true, true);
+                clearSide(sellOrders, state, false, true);
+            } else if (order.type() == OrderRequest.OrderType.BUY) {
                 buyOrders.add(order);
             } else {
                 sellOrders.add(order);
             }
 
-            matchOrders(buyOrders, sellOrders, state);
-            clearExcessLiquidity(buyOrders, sellOrders, state);
+            if (order.type() != OrderRequest.OrderType.CLEAR_ALL) {
+                matchOrders(buyOrders, sellOrders, state);
+                clearExcessLiquidity(buyOrders, sellOrders, state);
+            }
 
             // Save state back
             state.setBuyOrders(buyOrders.stream().sorted(buyOrders.comparator()).toList());
@@ -180,27 +186,31 @@ public class MatchingEngineTopology {
         }
 
         private void clearExcessLiquidity(PriorityQueue<OrderRequest> buyOrders, PriorityQueue<OrderRequest> sellOrders, OrderBookState state) {
-            clearSide(buyOrders, state, true);
-            clearSide(sellOrders, state, false);
+            clearSide(buyOrders, state, true, false);
+            clearSide(sellOrders, state, false, false);
         }
 
-        private void clearSide(PriorityQueue<OrderRequest> queue, OrderBookState state, boolean isBuy) {
+        private void clearSide(PriorityQueue<OrderRequest> queue, OrderBookState state, boolean isBuy, boolean force) {
             BigDecimal totalVolume = queue.stream()
                     .map(OrderRequest::amount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            if (totalVolume.compareTo(MAX_SIDE_VOLUME) <= 0) {
+            if (!force && totalVolume.compareTo(MAX_SIDE_VOLUME) <= 0) {
                 return;
             }
 
-            log.info("Total {} volume {} exceeds limit {}. Clearing oldest orders.", 
-                    isBuy ? "BUY" : "SELL", totalVolume, MAX_SIDE_VOLUME);
+            if (force) {
+                log.info("Force clearing all {} orders (Volume: {}).", isBuy ? "BUY" : "SELL", totalVolume);
+            } else {
+                log.info("Total {} volume {} exceeds limit {}. Clearing oldest orders.", 
+                        isBuy ? "BUY" : "SELL", totalVolume, MAX_SIDE_VOLUME);
+            }
 
             // Sort by age (timestamp) to clear oldest first
             List<OrderRequest> ordersByAge = new ArrayList<>(queue);
             ordersByAge.sort(Comparator.comparing(OrderRequest::timestamp));
 
-            while (totalVolume.compareTo(MAX_SIDE_VOLUME) > 0 && !ordersByAge.isEmpty()) {
+            while ((force || totalVolume.compareTo(MAX_SIDE_VOLUME) > 0) && !ordersByAge.isEmpty()) {
                 OrderRequest oldest = ordersByAge.remove(0);
                 queue.remove(oldest);
                 totalVolume = totalVolume.subtract(oldest.amount());

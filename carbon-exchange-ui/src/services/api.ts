@@ -46,3 +46,19 @@ export const placeOrder = async (order: OrderRequest): Promise<void> => {
         throw new Error('Failed to submit order to the exchange');
     }
 };
+
+/**
+ * Triggers an emergency resolve of all ongoing orders.
+ * 
+ * @returns a promise that resolves when the command is successfully issued
+ * @throws Error if the request fails
+ */
+export const emergencyResolveAll = async (): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/emergency-resolve`, {
+        method: 'POST',
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to trigger emergency resolve');
+    }
+};

@@ -14,6 +14,7 @@ import org.springframework.kafka.support.serializer.JsonSerde;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -97,7 +98,7 @@ class MatchingEngineTopologyTest {
         inputTopic.pipeInput(buyerId.toString(), buyOrder);
 
         assertThat(snapshotOutputTopic.isEmpty()).isFalse();
-        OrderBookSnapshot snapshot = snapshotOutputTopic.readRecordsToList().get(0).value();
+        OrderBookSnapshot snapshot = snapshotOutputTopic.readValuesToList().get(0);
         assertThat(snapshot.buyOrders()).hasSize(1);
         assertThat(snapshot.buyOrders().get(0).courierId()).isEqualTo(buyerId);
 
@@ -132,10 +133,34 @@ class MatchingEngineTopologyTest {
         assertThat(clearingTrade.getSellerId()).isEqualTo(oldestId);
         
         // Also verify the snapshot volume is limited
-        OrderBookSnapshot lastSnapshot = snapshotOutputTopic.readRecordsToList().get(50).value();
+        OrderBookSnapshot lastSnapshot = snapshotOutputTopic.readValuesToList().get(50);
         BigDecimal totalVolume = lastSnapshot.sellOrders().stream()
                 .map(OrderRequest::amount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         assertThat(totalVolume).isLessThanOrEqualTo(new BigDecimal("500.0"));
+    }
+
+    @Test
+    void shouldEmergencyClearAll() {
+        // Send some orders
+        inputTopic.pipeInput("buy1", new OrderRequest(UUID.randomUUID(), OrderRequest.OrderType.BUY, OrderRequest.ExecutionMode.LIMIT, new BigDecimal("10.0"), new BigDecimal("20.0"), Instant.now()));
+        inputTopic.pipeInput("sell1", new OrderRequest(UUID.randomUUID(), OrderRequest.OrderType.SELL, OrderRequest.ExecutionMode.LIMIT, new BigDecimal("10.0"), new BigDecimal("25.0"), Instant.now()));
+
+        // Verify they are in the book
+        OrderBookSnapshot snapshotBefore = snapshotOutputTopic.readValuesToList().get(1);
+        assertThat(snapshotBefore.buyOrders()).hasSize(1);
+        assertThat(snapshotBefore.sellOrders()).hasSize(1);
+
+        // Send CLEAR_ALL
+        inputTopic.pipeInput("clear", new OrderRequest(UUID.randomUUID(), OrderRequest.OrderType.CLEAR_ALL, OrderRequest.ExecutionMode.LIMIT, BigDecimal.ONE, BigDecimal.ZERO, Instant.now()));
+
+        // Verify the book is empty
+        List<OrderBookSnapshot> snapshots = snapshotOutputTopic.readValuesToList();
+        OrderBookSnapshot lastSnapshot = snapshots.get(snapshots.size() - 1);
+        assertThat(lastSnapshot.buyOrders()).isEmpty();
+        assertThat(lastSnapshot.sellOrders()).isEmpty();
+        
+        // Verify trades were generated for clearing
+        assertThat(tradeOutputTopic.readValuesToList()).hasSize(2);
     }
 }

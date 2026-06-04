@@ -20,7 +20,7 @@ public record OrderRequest(
         BigDecimal price,
         Instant timestamp
 ) {
-    public enum OrderType { BUY, SELL }
+    public enum OrderType { BUY, SELL, CLEAR_ALL }
     public enum ExecutionMode { LIMIT, MARKET }
 
     /**

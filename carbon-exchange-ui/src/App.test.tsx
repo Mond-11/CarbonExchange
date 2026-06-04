@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import App from './App';
 import * as api from './services/api';
 import * as auth from './services/auth';
@@ -7,6 +7,7 @@ import * as auth from './services/auth';
 vi.mock('./services/api', () => ({
     fetchOrderBook: vi.fn(),
     fetchTrades: vi.fn(),
+    emergencyResolveAll: vi.fn(),
 }));
 
 vi.mock('./services/auth', () => ({
@@ -82,6 +83,20 @@ describe('App', () => {
 
         await waitFor(() => {
             expect(screen.getAllByText('$15.00')[0]).toBeInTheDocument();
+        });
+    });
+
+    it('should trigger emergency resolve when button is clicked', async () => {
+        vi.mocked(api.emergencyResolveAll).mockResolvedValue();
+        vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+        render(<App />);
+
+        const button = screen.getByText(/Emergency Resolve All/i);
+        fireEvent.click(button);
+
+        await waitFor(() => {
+            expect(api.emergencyResolveAll).toHaveBeenCalled();
         });
     });
 });

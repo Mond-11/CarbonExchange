@@ -51,6 +51,10 @@ body {
   color: var(--secondary-text) !important;
 }
 
+.x-small {
+  font-size: 0.75rem;
+}
+
 /* Remove arrows from number inputs */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {

@@ -1,6 +1,6 @@
 // src/types/index.ts
 
-export type OrderType = 'BUY' | 'SELL';
+export type OrderType = 'BUY' | 'SELL' | 'CLEAR_ALL';
 export type ExecutionMode = 'LIMIT' | 'MARKET';
 
 export interface OrderRequest {

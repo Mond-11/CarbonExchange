@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Client } from '@stomp/stompjs';
 import { Container, Row, Col, Navbar, Nav, Button, Table, Card, Badge, Spinner } from 'react-bootstrap';
-import { fetchOrderBook, fetchTrades } from './services/api';
+import { fetchOrderBook, fetchTrades, emergencyResolveAll } from './services/api';
 import { getCurrentUser, logout, fetchUser } from './services/auth';
 import type { OrderBookSnapshot, Trade, User } from './types';
 import TradingForm from './components/TradingForm';
@@ -25,6 +25,8 @@ function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [user, setUser] = useState<User | null>(getCurrentUser());
   const [theme, setTheme] = useState<'light' | 'dark'>(() => (localStorage.getItem('theme') as 'light' | 'dark') || 'dark');
+  const [askSort, setAskSort] = useState<{ key: 'price' | 'time', dir: 'asc' | 'desc' }>({ key: 'price', dir: 'asc' });
+  const [bidSort, setBidSort] = useState<{ key: 'price' | 'time', dir: 'asc' | 'desc' }>({ key: 'price', dir: 'desc' });
   const userRef = useRef<User | null>(user);
 
   useEffect(() => {
@@ -94,6 +96,45 @@ function App() {
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
+
+  const handleEmergencyResolve = async () => {
+    if (window.confirm("Are you sure you want to resolve ALL ongoing orders? This is an emergency development feature.")) {
+      try {
+        await emergencyResolveAll();
+      } catch (err) {
+        console.error("Emergency resolve failed:", err);
+        setError("Failed to trigger emergency resolve.");
+      }
+    }
+  };
+
+  const sortOrders = (orders: OrderRequest[], sort: { key: 'price' | 'time', dir: 'asc' | 'desc' }, isBuy: boolean) => {
+    return [...orders].sort((a, b) => {
+      // Market orders always have top priority regardless of sort
+      if (a.executionMode === 'MARKET' && b.executionMode === 'MARKET') return 0;
+      if (a.executionMode === 'MARKET') return -1;
+      if (b.executionMode === 'MARKET') return 1;
+
+      let result = 0;
+      if (sort.key === 'price') {
+        result = (a.price || 0) - (b.price || 0);
+      } else {
+        result = new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+      }
+      return sort.dir === 'asc' ? result : -result;
+    });
+  };
+
+  const toggleSort = (side: 'buy' | 'sell', key: 'price' | 'time') => {
+    const setter = side === 'buy' ? setBidSort : setAskSort;
+    setter(prev => ({
+      key,
+      dir: prev.key === key ? (prev.dir === 'asc' ? 'desc' : 'asc') : (key === 'price' ? (side === 'buy' ? 'desc' : 'asc') : 'asc')
+    }));
+  };
+
+  const sortedAsks = sortOrders(orderBook.sellOrders, askSort, false);
+  const sortedBids = sortOrders(orderBook.buyOrders, bidSort, true);
 
   return (
     <div className="min-vh-100 d-flex flex-column">
@@ -169,7 +210,19 @@ function App() {
               <Col md={12}>
                 <Card className="panel-card shadow-sm border-0 mb-4">
                   <Card.Header className="bg-transparent border-0 pt-3 pb-0">
-                    <h5 className="mb-0 fw-bold text-body">Live Order Book</h5>
+                    <div className="d-flex justify-content-between align-items-center">
+                      <h5 className="mb-0 fw-bold text-body">Live Order Book</h5>
+                      <Button 
+                        variant="outline-danger" 
+                        size="sm" 
+                        onClick={handleEmergencyResolve}
+                        className="px-3 py-1 fw-bold small text-uppercase"
+                        style={{ fontSize: '0.7rem' }}
+                      >
+                        <i className="bi bi-exclamation-triangle-fill me-1"></i>
+                        Emergency Resolve All
+                      </Button>
+                    </div>
                   </Card.Header>
                   <Card.Body>
                     <Row>
@@ -178,17 +231,26 @@ function App() {
                         <div className="scrollable-list">
                           <Table variant={theme === 'dark' ? 'dark' : 'light'} hover size="sm" className="bg-transparent mb-0">
                             <thead className="text-secondary small">
-                              <tr><th>Price</th><th>Amount</th></tr>
+                              <tr>
+                                <th onClick={() => toggleSort('sell', 'price')} style={{ cursor: 'pointer' }}>
+                                  Price {askSort.key === 'price' && <i className={`bi bi-sort-numeric-${askSort.dir === 'asc' ? 'down' : 'up'}`}></i>}
+                                </th>
+                                <th>Amount</th>
+                                <th onClick={() => toggleSort('sell', 'time')} style={{ cursor: 'pointer' }}>
+                                  Time {askSort.key === 'time' && <i className={`bi bi-sort-numeric-${askSort.dir === 'asc' ? 'down' : 'up'}`}></i>}
+                                </th>
+                              </tr>
                             </thead>
                             <tbody>
-                              {orderBook.sellOrders.map((order, i) => (
+                              {sortedAsks.map((order, i) => (
                                 <tr key={i} className="sell-row border-0">
                                   <td>{order.executionMode === 'MARKET' ? 'MARKET' : `$${Number(order.price).toFixed(2)}`}</td>
                                   <td>{Number(order.amount).toFixed(2)}</td>
+                                  <td className="text-secondary x-small">{new Date(order.timestamp).toLocaleTimeString()}</td>
                                 </tr>
                               ))}
-                              {orderBook.sellOrders.length === 0 && (
-                                <tr><td colSpan={2} className="text-center text-secondary py-3 italic">Empty</td></tr>
+                              {sortedAsks.length === 0 && (
+                                <tr><td colSpan={3} className="text-center text-secondary py-3 italic">Empty</td></tr>
                               )}
                             </tbody>
                           </Table>
@@ -199,17 +261,26 @@ function App() {
                         <div className="scrollable-list">
                           <Table variant={theme === 'dark' ? 'dark' : 'light'} hover size="sm" className="bg-transparent mb-0">
                             <thead className="text-secondary small">
-                              <tr><th>Price</th><th>Amount</th></tr>
+                              <tr>
+                                <th onClick={() => toggleSort('buy', 'price')} style={{ cursor: 'pointer' }}>
+                                  Price {bidSort.key === 'price' && <i className={`bi bi-sort-numeric-${bidSort.dir === 'asc' ? 'down' : 'up'}`}></i>}
+                                </th>
+                                <th>Amount</th>
+                                <th onClick={() => toggleSort('buy', 'time')} style={{ cursor: 'pointer' }}>
+                                  Time {bidSort.key === 'time' && <i className={`bi bi-sort-numeric-${bidSort.dir === 'asc' ? 'down' : 'up'}`}></i>}
+                                </th>
+                              </tr>
                             </thead>
                             <tbody>
-                              {orderBook.buyOrders.map((order, i) => (
+                              {sortedBids.map((order, i) => (
                                 <tr key={i} className="buy-row border-0">
                                   <td>{order.executionMode === 'MARKET' ? 'MARKET' : `$${Number(order.price).toFixed(2)}`}</td>
                                   <td>{Number(order.amount).toFixed(2)}</td>
+                                  <td className="text-secondary x-small">{new Date(order.timestamp).toLocaleTimeString()}</td>
                                 </tr>
                               ))}
-                              {orderBook.buyOrders.length === 0 && (
-                                <tr><td colSpan={2} className="text-center text-secondary py-3 italic">Empty</td></tr>
+                              {sortedBids.length === 0 && (
+                                <tr><td colSpan={3} className="text-center text-secondary py-3 italic">Empty</td></tr>
                               )}
                             </tbody>
                           </Table>
